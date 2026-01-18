@@ -1,0 +1,29 @@
+{
+	"name": "openwrt-control-panel",
+	"version": "1.0.0",
+	"type": "module",
+	"description": "Modern management interface for OpenWrt routers (44KB / 10KB gzipped)",
+	"keywords": [
+		"openwrt",
+		"ubus",
+		"management",
+		"ui",
+		"theme",
+		"vanilla-js",
+		"spa",
+		"router"
+	],
+	"author": "",
+	"license": "Apache-2.0",
+	"scripts": {
+		"dev": "node scripts/watch.js",
+		"deploy": "cat custom/index.html | ssh -o StrictHostKeyChecking=no -o UserKnownHostsFile=/dev/null -p 2222 root@127.0.0.1 'cat > /www/custom/index.html' && cat custom/app.js | ssh -o StrictHostKeyChecking=no -o UserKnownHostsFile=/dev/null -p 2222 root@127.0.0.1 'cat > /www/custom/app.js' && cat custom/app.css | ssh -o StrictHostKeyChecking=no -o UserKnownHostsFile=/dev/null -p 2222 root@127.0.0.1 'cat > /www/custom/app.css'"
+	},
+	"devDependencies": {
+		"chokidar": "^5.0.0"
+	},
+	"repository": {
+		"type": "git",
+		"url": "https://github.com/HudsonGraeme/openwrt-control-panel"
+	}
+}

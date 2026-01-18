@@ -1,0 +1,58 @@
+#!/usr/bin/expect -f
+
+set timeout 180
+set image_path "vm/openwrt.img"
+
+log_user 1
+
+spawn qemu-system-x86_64 \
+    -M q35 \
+    -m 512 \
+    -smp 2 \
+    -drive file=$image_path,format=raw,if=virtio \
+    -device e1000,netdev=net0 \
+    -netdev user,id=net0,hostfwd=tcp:127.0.0.1:8080-:80,hostfwd=tcp:127.0.0.1:2222-:22 \
+    -nographic
+
+puts "Waiting for boot... (this takes 60-90 seconds)"
+expect {
+    timeout { puts "Boot timeout, but continuing..."; exp_continue }
+    "Please press Enter to activate this console."
+}
+sleep 2
+send "\r"
+
+expect "root@OpenWrt:/#"
+send "uci set network.lan.proto='dhcp'\r"
+
+expect "root@OpenWrt:/#"
+send "uci delete network.lan.ipaddr\r"
+
+expect "root@OpenWrt:/#"
+send "uci delete network.lan.netmask\r"
+
+expect "root@OpenWrt:/#"
+send "uci commit network\r"
+
+expect "root@OpenWrt:/#"
+send "/etc/init.d/network restart\r"
+
+expect "root@OpenWrt:/#"
+send "sleep 10\r"
+
+expect "root@OpenWrt:/#"
+send "ifconfig\r"
+
+expect "root@OpenWrt:/#"
+send "/etc/init.d/uhttpd restart\r"
+
+expect "root@OpenWrt:/#"
+send "/etc/init.d/dropbear restart\r"
+
+expect "root@OpenWrt:/#"
+send "echo 'Network configured for QEMU. Access LuCI at http://localhost:8080'\r"
+
+expect "root@OpenWrt:/#"
+send "echo 'SSH: ssh -p 2222 root@localhost'\r"
+
+interact

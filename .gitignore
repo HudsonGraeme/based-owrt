@@ -1,0 +1,7 @@
+node_modules/
+*.log
+*.ipk
+.DS_Store
+vm/
+*.img
+*.img.gz

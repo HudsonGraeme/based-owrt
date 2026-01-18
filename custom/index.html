@@ -1,0 +1,599 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+	<meta charset="UTF-8">
+	<meta name="viewport" content="width=device-width, initial-scale=1.0">
+	<title>OpenWrt Control</title>
+	<link rel="stylesheet" href="app.css">
+</head>
+<body>
+	<div id="app">
+		<div id="login-view" class="view">
+			<div class="login-card">
+				<h1>OPENWRT</h1>
+				<form id="login-form">
+					<input type="text" id="username" placeholder="Username" value="root" autocomplete="username">
+					<input type="password" id="password" placeholder="Password" autocomplete="current-password">
+					<button type="submit">LOGIN</button>
+					<div id="login-error" class="error"></div>
+				</form>
+			</div>
+		</div>
+
+		<div id="main-view" class="view hidden">
+			<header class="header">
+				<div class="logo">
+					<svg width="24" height="24" viewBox="0 0 24 24" fill="none" class="logo-icon">
+						<circle cx="6" cy="12" r="2" fill="currentColor"/>
+						<path d="M10 9 L14 9 L14 15 L10 15 Z" fill="none" stroke="currentColor" stroke-width="1.5"/>
+						<path d="M14 10 L17 7" stroke="currentColor" stroke-width="1.5" stroke-linecap="square"/>
+						<path d="M14 12 L18 12" stroke="currentColor" stroke-width="1.5" stroke-linecap="square"/>
+						<path d="M14 14 L17 17" stroke="currentColor" stroke-width="1.5" stroke-linecap="square"/>
+					</svg>
+					<span>OPENWRT</span>
+				</div>
+				<nav class="nav">
+					<a href="#" data-page="dashboard" class="active">DASHBOARD</a>
+					<a href="#" data-page="network">NETWORK</a>
+					<a href="#" data-page="system">SYSTEM</a>
+				</nav>
+				<button id="logout-btn" class="logout-btn">LOGOUT</button>
+			</header>
+
+			<main class="content">
+				<div id="dashboard-page" class="page">
+					<h2>SYSTEM STATUS</h2>
+					<div class="stats-grid">
+						<div class="stat-card">
+							<div class="stat-label">HOSTNAME</div>
+							<div class="stat-value" id="hostname">Loading...</div>
+						</div>
+						<div class="stat-card">
+							<div class="stat-label">UPTIME</div>
+							<div class="stat-value" id="uptime">Loading...</div>
+						</div>
+						<div class="stat-card">
+							<div class="stat-label">MEMORY</div>
+							<div class="stat-value" id="memory">Loading...</div>
+							<div class="progress-bar">
+								<div class="progress-fill" id="memory-bar" style="width: 0%"></div>
+							</div>
+						</div>
+						<div class="stat-card">
+							<div class="stat-label">LOAD AVG</div>
+							<div class="stat-value" id="load">Loading...</div>
+							<div class="graph-container">
+								<svg class="graph-svg" id="load-graph" viewBox="0 0 300 80" preserveAspectRatio="none">
+									<defs>
+										<linearGradient id="graph-gradient" x1="0%" y1="0%" x2="0%" y2="100%">
+											<stop offset="0%" style="stop-color:#00A3E0;stop-opacity:0.5" />
+											<stop offset="100%" style="stop-color:#00A3E0;stop-opacity:0" />
+										</linearGradient>
+									</defs>
+								</svg>
+							</div>
+						</div>
+					</div>
+
+					<div class="stats-grid" style="margin-top: 24px;">
+						<div class="stat-card">
+							<div class="stat-label">CPU USAGE</div>
+							<div class="stat-value" id="cpu">0%</div>
+							<div class="progress-bar">
+								<div class="progress-fill" id="cpu-bar" style="width: 0%"></div>
+							</div>
+						</div>
+						<div class="stat-card">
+							<div class="stat-label">NETWORK RX</div>
+							<div class="stat-value" id="net-rx">0 KB/s</div>
+						</div>
+						<div class="stat-card">
+							<div class="stat-label">NETWORK TX</div>
+							<div class="stat-value" id="net-tx">0 KB/s</div>
+						</div>
+						<div class="stat-card">
+							<div class="stat-label">CONNECTED CLIENTS</div>
+							<div class="stat-value" id="clients">0</div>
+						</div>
+					</div>
+
+					<div class="section-title">QUICK ACTIONS</div>
+					<div class="quick-actions">
+						<button class="action-btn danger" id="reboot-btn">Reboot</button>
+						<button class="action-btn" id="restart-network-btn">Restart Network</button>
+						<button class="action-btn" id="restart-firewall-btn">Restart Firewall</button>
+					</div>
+
+					<div class="section-title">SYSTEM LOG</div>
+					<div class="stat-card">
+						<div class="log-viewer" id="system-log">
+							<div class="log-line">Loading system logs...</div>
+						</div>
+					</div>
+
+					<div class="section-title">ACTIVE CONNECTIONS</div>
+					<div class="stat-card">
+						<table class="data-table" id="connections-table">
+							<thead>
+								<tr>
+									<th>IP ADDRESS</th>
+									<th>MAC ADDRESS</th>
+									<th>HOSTNAME</th>
+									<th>STATUS</th>
+								</tr>
+							</thead>
+							<tbody>
+								<tr>
+									<td colspan="4" style="text-align: center; color: var(--steel-muted);">Loading...</td>
+								</tr>
+							</tbody>
+						</table>
+					</div>
+				</div>
+
+				<div id="network-page" class="page hidden">
+					<h2>NETWORK</h2>
+					<div class="tabs">
+						<button class="tab-btn active" data-tab="interfaces">INTERFACES</button>
+						<button class="tab-btn" data-tab="wireless">WIRELESS</button>
+						<button class="tab-btn" data-tab="firewall">FIREWALL</button>
+						<button class="tab-btn" data-tab="dhcp">DHCP</button>
+						<button class="tab-btn" data-tab="diagnostics">DIAGNOSTICS</button>
+					</div>
+
+					<div class="tab-content" id="tab-interfaces">
+						<div class="stat-card">
+							<table class="data-table" id="interfaces-table">
+								<thead>
+									<tr>
+										<th>INTERFACE</th>
+										<th>PROTOCOL</th>
+										<th>STATUS</th>
+										<th>IPV4 ADDRESS</th>
+										<th>RX/TX</th>
+										<th>ACTIONS</th>
+									</tr>
+								</thead>
+								<tbody>
+									<tr>
+										<td colspan="6" style="text-align: center; color: var(--steel-muted);">Loading...</td>
+									</tr>
+								</tbody>
+							</table>
+						</div>
+					</div>
+
+					<div class="modal hidden" id="interface-modal">
+						<div class="modal-backdrop"></div>
+						<div class="modal-content">
+							<div class="modal-header">
+								<h3 class="modal-title">CONFIGURE INTERFACE</h3>
+								<button class="modal-close" id="close-interface-modal">&times;</button>
+							</div>
+							<div class="modal-body">
+								<input type="hidden" id="edit-iface-name">
+
+								<div class="form-group">
+									<label class="form-label">PROTOCOL</label>
+									<select id="edit-iface-proto" class="form-input">
+										<option value="static">Static</option>
+										<option value="dhcp">DHCP</option>
+									</select>
+								</div>
+
+								<div id="static-config">
+									<div class="form-group">
+										<label class="form-label">IPV4 ADDRESS</label>
+										<input type="text" id="edit-iface-ipaddr" class="form-input" placeholder="192.168.1.1">
+									</div>
+
+									<div class="form-group">
+										<label class="form-label">NETMASK</label>
+										<input type="text" id="edit-iface-netmask" class="form-input" placeholder="255.255.255.0">
+									</div>
+
+									<div class="form-group">
+										<label class="form-label">GATEWAY</label>
+										<input type="text" id="edit-iface-gateway" class="form-input" placeholder="192.168.1.254">
+									</div>
+
+									<div class="form-group">
+										<label class="form-label">DNS SERVERS (space-separated)</label>
+										<input type="text" id="edit-iface-dns" class="form-input" placeholder="8.8.8.8 8.8.4.4">
+									</div>
+								</div>
+							</div>
+							<div class="modal-footer">
+								<button class="action-btn" id="cancel-interface-btn">CANCEL</button>
+								<button class="action-btn" id="save-interface-btn">SAVE CHANGES</button>
+							</div>
+						</div>
+					</div>
+
+					<div class="modal hidden" id="wireless-modal">
+						<div class="modal-backdrop"></div>
+						<div class="modal-content">
+							<div class="modal-header">
+								<h3 class="modal-title">CONFIGURE WIRELESS</h3>
+								<button class="modal-close" id="close-wireless-modal">&times;</button>
+							</div>
+							<div class="modal-body">
+								<input type="hidden" id="edit-wifi-radio">
+								<input type="hidden" id="edit-wifi-section">
+
+								<div class="form-group">
+									<label class="form-label">ENABLED</label>
+									<select id="edit-wifi-disabled" class="form-input">
+										<option value="0">Yes</option>
+										<option value="1">No (Disabled)</option>
+									</select>
+								</div>
+
+								<div class="form-group">
+									<label class="form-label">SSID (NETWORK NAME)</label>
+									<input type="text" id="edit-wifi-ssid" class="form-input" placeholder="MyNetwork">
+								</div>
+
+								<div class="form-group">
+									<label class="form-label">ENCRYPTION</label>
+									<select id="edit-wifi-encryption" class="form-input">
+										<option value="none">None (Open)</option>
+										<option value="psk2">WPA2-PSK</option>
+										<option value="psk-mixed">WPA/WPA2-PSK Mixed</option>
+										<option value="sae">WPA3-SAE</option>
+										<option value="sae-mixed">WPA2/WPA3-SAE Mixed</option>
+									</select>
+								</div>
+
+								<div class="form-group" id="wifi-key-group">
+									<label class="form-label">PASSWORD</label>
+									<input type="password" id="edit-wifi-key" class="form-input" placeholder="Enter password (8+ characters)">
+								</div>
+
+								<div class="form-group">
+									<label class="form-label">CHANNEL</label>
+									<select id="edit-wifi-channel" class="form-input">
+										<option value="auto">Auto</option>
+									</select>
+								</div>
+
+								<div class="form-group">
+									<label class="form-label">TRANSMIT POWER</label>
+									<select id="edit-wifi-txpower" class="form-input">
+										<option value="">Default</option>
+										<option value="10">Low (10 dBm)</option>
+										<option value="15">Medium (15 dBm)</option>
+										<option value="20">High (20 dBm)</option>
+										<option value="25">Maximum (25 dBm)</option>
+									</select>
+								</div>
+
+								<div class="form-group">
+									<label class="form-label">HIDDEN SSID</label>
+									<select id="edit-wifi-hidden" class="form-input">
+										<option value="0">No (Broadcast SSID)</option>
+										<option value="1">Yes (Hidden)</option>
+									</select>
+								</div>
+							</div>
+							<div class="modal-footer">
+								<button class="action-btn" id="cancel-wireless-btn">CANCEL</button>
+								<button class="action-btn" id="save-wireless-btn">SAVE CHANGES</button>
+							</div>
+						</div>
+					</div>
+
+					<div class="tab-content hidden" id="tab-wireless">
+						<div class="stat-card">
+							<table class="data-table" id="wireless-table">
+								<thead>
+									<tr>
+										<th>RADIO</th>
+										<th>SSID</th>
+										<th>CHANNEL</th>
+										<th>STATUS</th>
+										<th>ENCRYPTION</th>
+										<th>ACTIONS</th>
+									</tr>
+								</thead>
+								<tbody>
+									<tr>
+										<td colspan="6" style="text-align: center; color: var(--steel-muted);">Loading...</td>
+									</tr>
+								</tbody>
+							</table>
+						</div>
+					</div>
+
+					<div class="tab-content hidden" id="tab-firewall">
+						<div class="stat-card">
+							<div class="section-title">PORT FORWARDING RULES</div>
+							<button class="action-btn" id="add-forward-btn" style="margin-bottom: 16px;">ADD RULE</button>
+							<table class="data-table" id="firewall-table">
+								<thead>
+									<tr>
+										<th>NAME</th>
+										<th>PROTOCOL</th>
+										<th>EXTERNAL PORT</th>
+										<th>INTERNAL IP</th>
+										<th>INTERNAL PORT</th>
+										<th>ENABLED</th>
+										<th>ACTIONS</th>
+									</tr>
+								</thead>
+								<tbody>
+									<tr>
+										<td colspan="7" style="text-align: center; color: var(--steel-muted);">Loading...</td>
+									</tr>
+								</tbody>
+							</table>
+						</div>
+					</div>
+
+					<div class="modal hidden" id="forward-modal">
+						<div class="modal-backdrop"></div>
+						<div class="modal-content">
+							<div class="modal-header">
+								<h3 class="modal-title">PORT FORWARDING RULE</h3>
+								<button class="modal-close" id="close-forward-modal">&times;</button>
+							</div>
+							<div class="modal-body">
+								<input type="hidden" id="edit-forward-section">
+
+								<div class="form-group">
+									<label class="form-label">RULE NAME</label>
+									<input type="text" id="edit-forward-name" class="form-input" placeholder="SSH, HTTP, etc.">
+								</div>
+
+								<div class="form-group">
+									<label class="form-label">PROTOCOL</label>
+									<select id="edit-forward-proto" class="form-input">
+										<option value="tcp">TCP</option>
+										<option value="udp">UDP</option>
+										<option value="tcpudp">TCP+UDP</option>
+									</select>
+								</div>
+
+								<div class="form-group">
+									<label class="form-label">EXTERNAL PORT</label>
+									<input type="text" id="edit-forward-src-dport" class="form-input" placeholder="80 or 8080:8090">
+								</div>
+
+								<div class="form-group">
+									<label class="form-label">INTERNAL IP ADDRESS</label>
+									<input type="text" id="edit-forward-dest-ip" class="form-input" placeholder="192.168.1.100">
+								</div>
+
+								<div class="form-group">
+									<label class="form-label">INTERNAL PORT</label>
+									<input type="text" id="edit-forward-dest-port" class="form-input" placeholder="80 (leave empty to use external port)">
+								</div>
+
+								<div class="form-group">
+									<label class="form-label">ENABLED</label>
+									<select id="edit-forward-enabled" class="form-input">
+										<option value="1">Yes</option>
+										<option value="0">No (Disabled)</option>
+									</select>
+								</div>
+							</div>
+							<div class="modal-footer">
+								<button class="action-btn" id="cancel-forward-btn">CANCEL</button>
+								<button class="action-btn" id="save-forward-btn">SAVE RULE</button>
+							</div>
+						</div>
+					</div>
+
+					<div class="tab-content hidden" id="tab-dhcp">
+						<div class="stat-card">
+							<div class="section-title">DHCP LEASES</div>
+							<table class="data-table" id="dhcp-leases-table">
+								<thead>
+									<tr>
+										<th>HOSTNAME</th>
+										<th>IP ADDRESS</th>
+										<th>MAC ADDRESS</th>
+										<th>EXPIRES</th>
+									</tr>
+								</thead>
+								<tbody>
+									<tr>
+										<td colspan="4" style="text-align: center; color: var(--steel-muted);">Loading...</td>
+									</tr>
+								</tbody>
+							</table>
+						</div>
+
+						<div class="stat-card" style="margin-top: 24px;">
+							<div class="section-title">STATIC LEASES</div>
+							<button class="action-btn" id="add-static-lease-btn" style="margin-bottom: 16px;">ADD STATIC LEASE</button>
+							<table class="data-table" id="dhcp-static-table">
+								<thead>
+									<tr>
+										<th>HOSTNAME</th>
+										<th>MAC ADDRESS</th>
+										<th>IP ADDRESS</th>
+										<th>ACTIONS</th>
+									</tr>
+								</thead>
+								<tbody>
+									<tr>
+										<td colspan="4" style="text-align: center; color: var(--steel-muted);">Loading...</td>
+									</tr>
+								</tbody>
+							</table>
+						</div>
+					</div>
+
+					<div class="modal hidden" id="static-lease-modal">
+						<div class="modal-backdrop"></div>
+						<div class="modal-content">
+							<div class="modal-header">
+								<h3 class="modal-title">STATIC DHCP LEASE</h3>
+								<button class="modal-close" id="close-static-lease-modal">&times;</button>
+							</div>
+							<div class="modal-body">
+								<input type="hidden" id="edit-static-lease-section">
+
+								<div class="form-group">
+									<label class="form-label">HOSTNAME</label>
+									<input type="text" id="edit-static-lease-name" class="form-input" placeholder="laptop, desktop, etc.">
+								</div>
+
+								<div class="form-group">
+									<label class="form-label">MAC ADDRESS</label>
+									<input type="text" id="edit-static-lease-mac" class="form-input" placeholder="aa:bb:cc:dd:ee:ff">
+								</div>
+
+								<div class="form-group">
+									<label class="form-label">IP ADDRESS</label>
+									<input type="text" id="edit-static-lease-ip" class="form-input" placeholder="192.168.1.100">
+								</div>
+							</div>
+							<div class="modal-footer">
+								<button class="action-btn" id="cancel-static-lease-btn">CANCEL</button>
+								<button class="action-btn" id="save-static-lease-btn">SAVE LEASE</button>
+							</div>
+						</div>
+					</div>
+
+					<div class="tab-content hidden" id="tab-diagnostics">
+						<div class="stat-card">
+							<div class="section-title">PING</div>
+							<div class="diagnostic-form">
+								<input type="text" id="ping-host" placeholder="Enter hostname or IP" class="diag-input">
+								<button class="action-btn" id="ping-btn">RUN PING</button>
+							</div>
+							<div class="log-viewer" id="ping-output" style="min-height: 200px;">
+								<div class="log-line" style="color: var(--steel-muted);">Enter a hostname or IP address and click Run Ping</div>
+							</div>
+						</div>
+
+						<div class="stat-card" style="margin-top: 24px;">
+							<div class="section-title">TRACEROUTE</div>
+							<div class="diagnostic-form">
+								<input type="text" id="traceroute-host" placeholder="Enter hostname or IP" class="diag-input">
+								<button class="action-btn" id="traceroute-btn">RUN TRACEROUTE</button>
+							</div>
+							<div class="log-viewer" id="traceroute-output" style="min-height: 200px;">
+								<div class="log-line" style="color: var(--steel-muted);">Enter a hostname or IP address and click Run Traceroute</div>
+							</div>
+						</div>
+
+						<div class="stat-card" style="margin-top: 24px;">
+							<div class="section-title">WAKE-ON-LAN</div>
+							<div class="diagnostic-form">
+								<input type="text" id="wol-mac" placeholder="Enter MAC address (aa:bb:cc:dd:ee:ff)" class="diag-input">
+								<button class="action-btn" id="wol-btn">SEND WOL PACKET</button>
+							</div>
+							<div class="log-viewer" id="wol-output" style="min-height: 100px;">
+								<div class="log-line" style="color: var(--steel-muted);">Enter a MAC address to wake a device on the network</div>
+							</div>
+						</div>
+					</div>
+				</div>
+
+				<div id="system-page" class="page hidden">
+					<h2>SYSTEM</h2>
+					<div class="tabs">
+						<button class="tab-btn active" data-tab="general">GENERAL</button>
+						<button class="tab-btn" data-tab="admin">ADMINISTRATION</button>
+						<button class="tab-btn" data-tab="backup">BACKUP/RESTORE</button>
+						<button class="tab-btn" data-tab="software">SOFTWARE</button>
+						<button class="tab-btn" data-tab="startup">STARTUP</button>
+					</div>
+
+					<div class="tab-content" id="tab-general">
+						<div class="stat-card">
+							<div class="section-title">GENERAL SETTINGS</div>
+							<div class="form-group">
+								<label class="form-label">HOSTNAME</label>
+								<input type="text" id="system-hostname" class="form-input" value="OpenWrt">
+							</div>
+							<div class="form-group">
+								<label class="form-label">TIMEZONE</label>
+								<input type="text" id="system-timezone" class="form-input" value="UTC">
+							</div>
+							<div class="quick-actions">
+								<button class="action-btn" id="save-general-btn">SAVE CHANGES</button>
+							</div>
+						</div>
+					</div>
+
+					<div class="tab-content hidden" id="tab-admin">
+						<div class="stat-card">
+							<div class="section-title">CHANGE PASSWORD</div>
+							<form id="password-form" onsubmit="return false;">
+								<div class="form-group">
+									<label class="form-label">NEW PASSWORD</label>
+									<input type="password" id="new-password" class="form-input" placeholder="Enter new password" autocomplete="new-password">
+								</div>
+								<div class="form-group">
+									<label class="form-label">CONFIRM PASSWORD</label>
+									<input type="password" id="confirm-password" class="form-input" placeholder="Confirm password" autocomplete="new-password">
+								</div>
+								<div class="quick-actions">
+									<button type="button" class="action-btn" id="change-password-btn">CHANGE PASSWORD</button>
+								</div>
+							</form>
+						</div>
+					</div>
+
+					<div class="tab-content hidden" id="tab-backup">
+						<div class="stat-card">
+							<div class="section-title">BACKUP / RESTORE</div>
+							<div class="quick-actions">
+								<button class="action-btn" id="backup-btn">GENERATE BACKUP</button>
+								<button class="action-btn danger" id="reset-btn">RESET TO DEFAULTS</button>
+							</div>
+						</div>
+					</div>
+
+					<div class="tab-content hidden" id="tab-software">
+						<div class="stat-card">
+							<div class="section-title">INSTALLED PACKAGES</div>
+							<table class="data-table" id="packages-table">
+								<thead>
+									<tr>
+										<th>PACKAGE</th>
+										<th>VERSION</th>
+										<th>ACTIONS</th>
+									</tr>
+								</thead>
+								<tbody>
+									<tr>
+										<td colspan="3" style="text-align: center; color: var(--steel-muted);">Loading...</td>
+									</tr>
+								</tbody>
+							</table>
+						</div>
+					</div>
+
+					<div class="tab-content hidden" id="tab-startup">
+						<div class="stat-card">
+							<div class="section-title">SYSTEM SERVICES</div>
+							<table class="data-table" id="services-table">
+								<thead>
+									<tr>
+										<th>SERVICE</th>
+										<th>STATUS</th>
+										<th>ENABLED</th>
+										<th>ACTIONS</th>
+									</tr>
+								</thead>
+								<tbody>
+									<tr>
+										<td colspan="4" style="text-align: center; color: var(--steel-muted);">Loading...</td>
+									</tr>
+								</tbody>
+							</table>
+						</div>
+					</div>
+				</div>
+			</main>
+		</div>
+	</div>
+
+	<script src="app.js"></script>
+</body>
+</html>
