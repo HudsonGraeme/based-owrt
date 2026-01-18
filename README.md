@@ -111,8 +111,11 @@ All operations validated server-side. No privilege escalation paths.
 **Auto-deploy on save:**
 
 ```bash
+# QEMU VM
 pnpm dev
-# Edit scripts/watch.js to point to your router IP
+
+# Physical router
+pnpm dev:physical 192.168.1.35
 ```
 
 **Project structure:**

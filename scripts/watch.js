@@ -1,9 +1,22 @@
 import chokidar from 'chokidar';
 import { execSync } from 'child_process';
 
-const SSH = 'ssh -i ~/.ssh/router root@192.168.1.35';
+const args = process.argv.slice(2);
+const target = args[0] || 'qemu';
 
-console.log('Watching for changes in custom/...');
+let SSH;
+let targetName;
+
+if (target === 'qemu') {
+	SSH = 'ssh -o StrictHostKeyChecking=no -o UserKnownHostsFile=/dev/null -p 2222 root@localhost';
+	targetName = 'QEMU VM (localhost:2222)';
+} else {
+	SSH = `ssh -i ~/.ssh/router root@${target}`;
+	targetName = `Physical router (${target})`;
+}
+
+console.log(`Watching for changes in custom/...`);
+console.log(`Target: ${targetName}\n`);
 
 const watcher = chokidar.watch('custom', {
 	persistent: true,
@@ -23,13 +36,13 @@ watcher.on('all', (event, path) => {
 
 function deploy() {
 	try {
-		console.log('Deploying to router...');
+		console.log(`Deploying to ${targetName}...`);
 
 		execSync(`cat custom/index.html | ${SSH} "cat > /www/custom/index.html"`, { stdio: 'pipe' });
 		execSync(`cat custom/app.js | ${SSH} "cat > /www/custom/app.js"`, { stdio: 'pipe' });
 		execSync(`cat custom/app.css | ${SSH} "cat > /www/custom/app.css"`, { stdio: 'pipe' });
 
-		console.log('Deployed successfully');
+		console.log('Deployed successfully\n');
 	} catch (err) {
 		console.error('Deploy failed:', err.message);
 	}

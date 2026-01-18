@@ -10,10 +10,13 @@ Development guide for the Based OpenWrt management interface.
 # Install dependencies
 pnpm install
 
-# Start development server with auto-deploy
+# Auto-deploy to QEMU VM (localhost:2222)
 pnpm dev
 
-# Edit files in custom/ - changes auto-deploy to router
+# Auto-deploy to physical router
+pnpm dev:physical 192.168.1.35
+
+# Edit files in custom/ - changes auto-deploy to target
 ```
 
 ---
@@ -120,11 +123,9 @@ ssh-copy-id -i ~/.ssh/router root@192.168.1.1
 # Deploy initial files
 scp -r custom/* root@192.168.1.1:/www/custom/
 
-# Start auto-deploy
-pnpm dev
+# Start auto-deploy to your router IP
+pnpm dev:physical 192.168.1.35
 ```
-
-Edit `scripts/watch.js` to point to your router IP.
 
 **How auto-deploy works:**
 - Watches `custom/` directory for changes
@@ -141,8 +142,11 @@ Full OpenWrt x86_64 VM for isolated testing.
 # Download and configure OpenWrt image
 ./scripts/setup-qemu.sh
 
-# Start VM
+# Start VM (in separate terminal)
 ./scripts/start-vm.sh
+
+# Start auto-deploy (in another terminal)
+pnpm dev
 ```
 
 **QEMU Configuration:**
