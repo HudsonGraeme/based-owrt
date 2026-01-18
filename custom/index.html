@@ -457,6 +457,82 @@
 						</div>
 					</div>
 
+					<div class="modal hidden" id="cron-modal">
+						<div class="modal-backdrop"></div>
+						<div class="modal-content">
+							<div class="modal-header">
+								<h3 class="modal-title">SCHEDULED TASK</h3>
+								<button class="modal-close" id="close-cron-modal">&times;</button>
+							</div>
+							<div class="modal-body">
+								<input type="hidden" id="edit-cron-index">
+
+								<div class="form-group">
+									<label class="form-label">MINUTE (0-59, * for every)</label>
+									<input type="text" id="edit-cron-minute" class="form-input" placeholder="*">
+								</div>
+
+								<div class="form-group">
+									<label class="form-label">HOUR (0-23, * for every)</label>
+									<input type="text" id="edit-cron-hour" class="form-input" placeholder="*">
+								</div>
+
+								<div class="form-group">
+									<label class="form-label">DAY OF MONTH (1-31, * for every)</label>
+									<input type="text" id="edit-cron-day" class="form-input" placeholder="*">
+								</div>
+
+								<div class="form-group">
+									<label class="form-label">MONTH (1-12, * for every)</label>
+									<input type="text" id="edit-cron-month" class="form-input" placeholder="*">
+								</div>
+
+								<div class="form-group">
+									<label class="form-label">DAY OF WEEK (0-6, 0=Sunday, * for every)</label>
+									<input type="text" id="edit-cron-weekday" class="form-input" placeholder="*">
+								</div>
+
+								<div class="form-group">
+									<label class="form-label">COMMAND</label>
+									<input type="text" id="edit-cron-command" class="form-input" placeholder="/usr/bin/example.sh">
+								</div>
+
+								<div class="form-group">
+									<label style="display: flex; align-items: center; gap: 8px; cursor: pointer;">
+										<input type="checkbox" id="edit-cron-enabled" checked>
+										<span>ENABLED</span>
+									</label>
+								</div>
+							</div>
+							<div class="modal-footer">
+								<button class="action-btn" id="cancel-cron-btn">CANCEL</button>
+								<button class="action-btn" id="save-cron-btn">SAVE TASK</button>
+							</div>
+						</div>
+					</div>
+
+					<div class="modal hidden" id="ssh-key-modal">
+						<div class="modal-backdrop"></div>
+						<div class="modal-content">
+							<div class="modal-header">
+								<h3 class="modal-title">SSH AUTHORIZED KEY</h3>
+								<button class="modal-close" id="close-ssh-key-modal">&times;</button>
+							</div>
+							<div class="modal-body">
+								<input type="hidden" id="edit-ssh-key-index">
+
+								<div class="form-group">
+									<label class="form-label">PUBLIC KEY</label>
+									<textarea id="edit-ssh-key-content" class="form-input" rows="4" placeholder="ssh-rsa AAAAB3NzaC1yc2E... user@host"></textarea>
+								</div>
+							</div>
+							<div class="modal-footer">
+								<button class="action-btn" id="cancel-ssh-key-btn">CANCEL</button>
+								<button class="action-btn" id="save-ssh-key-btn">SAVE KEY</button>
+							</div>
+						</div>
+					</div>
+
 					<div class="tab-content hidden" id="tab-diagnostics">
 						<div class="stat-card">
 							<div class="section-title">PING</div>
@@ -501,6 +577,10 @@
 						<button class="tab-btn" data-tab="backup">BACKUP/RESTORE</button>
 						<button class="tab-btn" data-tab="software">SOFTWARE</button>
 						<button class="tab-btn" data-tab="startup">STARTUP</button>
+						<button class="tab-btn" data-tab="cron">SCHEDULED TASKS</button>
+						<button class="tab-btn" data-tab="ssh-keys">SSH KEYS</button>
+						<button class="tab-btn" data-tab="mounts">STORAGE</button>
+						<button class="tab-btn" data-tab="led">LED</button>
 					</div>
 
 					<div class="tab-content" id="tab-general">
@@ -584,6 +664,97 @@
 								<tbody>
 									<tr>
 										<td colspan="4" style="text-align: center; color: var(--steel-muted);">Loading...</td>
+									</tr>
+								</tbody>
+							</table>
+						</div>
+					</div>
+
+					<div class="tab-content hidden" id="tab-cron">
+						<div class="stat-card">
+							<div class="section-title">SCHEDULED TASKS</div>
+							<div class="quick-actions" style="margin-bottom: 16px;">
+								<button class="action-btn" id="add-cron-btn">ADD TASK</button>
+							</div>
+							<table class="data-table" id="cron-table">
+								<thead>
+									<tr>
+										<th>SCHEDULE</th>
+										<th>COMMAND</th>
+										<th>ENABLED</th>
+										<th>ACTIONS</th>
+									</tr>
+								</thead>
+								<tbody>
+									<tr>
+										<td colspan="4" style="text-align: center; color: var(--steel-muted);">Loading...</td>
+									</tr>
+								</tbody>
+							</table>
+						</div>
+					</div>
+
+					<div class="tab-content hidden" id="tab-ssh-keys">
+						<div class="stat-card">
+							<div class="section-title">SSH AUTHORIZED KEYS</div>
+							<div class="quick-actions" style="margin-bottom: 16px;">
+								<button class="action-btn" id="add-ssh-key-btn">ADD KEY</button>
+							</div>
+							<table class="data-table" id="ssh-keys-table">
+								<thead>
+									<tr>
+										<th>TYPE</th>
+										<th>KEY</th>
+										<th>COMMENT</th>
+										<th>ACTIONS</th>
+									</tr>
+								</thead>
+								<tbody>
+									<tr>
+										<td colspan="4" style="text-align: center; color: var(--steel-muted);">Loading...</td>
+									</tr>
+								</tbody>
+							</table>
+						</div>
+					</div>
+
+					<div class="tab-content hidden" id="tab-mounts">
+						<div class="stat-card">
+							<div class="section-title">MOUNT POINTS</div>
+							<table class="data-table" id="mounts-table">
+								<thead>
+									<tr>
+										<th>DEVICE</th>
+										<th>MOUNT POINT</th>
+										<th>FILESYSTEM</th>
+										<th>SIZE</th>
+										<th>USED</th>
+										<th>AVAILABLE</th>
+									</tr>
+								</thead>
+								<tbody>
+									<tr>
+										<td colspan="6" style="text-align: center; color: var(--steel-muted);">Loading...</td>
+									</tr>
+								</tbody>
+							</table>
+						</div>
+					</div>
+
+					<div class="tab-content hidden" id="tab-led">
+						<div class="stat-card">
+							<div class="section-title">LED CONFIGURATION</div>
+							<table class="data-table" id="led-table">
+								<thead>
+									<tr>
+										<th>LED</th>
+										<th>TRIGGER</th>
+										<th>ACTIONS</th>
+									</tr>
+								</thead>
+								<tbody>
+									<tr>
+										<td colspan="3" style="text-align: center; color: var(--steel-muted);">Loading...</td>
 									</tr>
 								</tbody>
 							</table>

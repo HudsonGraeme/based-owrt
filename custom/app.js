@@ -1,4 +1,5 @@
 class OpenWrtApp {
+
 	constructor() {
 		this.sessionId = localStorage.getItem('ubus_session');
 		this.pollInterval = null;
@@ -486,6 +487,38 @@ class OpenWrtApp {
 			this.saveStaticLease();
 		});
 
+		document.getElementById('add-cron-btn').addEventListener('click', () => {
+			this.openCronJob();
+		});
+
+		document.getElementById('close-cron-modal').addEventListener('click', () => {
+			this.closeCronJob();
+		});
+
+		document.getElementById('cancel-cron-btn').addEventListener('click', () => {
+			this.closeCronJob();
+		});
+
+		document.getElementById('save-cron-btn').addEventListener('click', () => {
+			this.saveCronJob();
+		});
+
+		document.getElementById('add-ssh-key-btn').addEventListener('click', () => {
+			this.openSSHKey();
+		});
+
+		document.getElementById('close-ssh-key-modal').addEventListener('click', () => {
+			this.closeSSHKey();
+		});
+
+		document.getElementById('cancel-ssh-key-btn').addEventListener('click', () => {
+			this.closeSSHKey();
+		});
+
+		document.getElementById('save-ssh-key-btn').addEventListener('click', () => {
+			this.saveSSHKey();
+		});
+
 		document.getElementById('backup-btn').addEventListener('click', () => {
 			this.generateBackup();
 		});
@@ -541,19 +574,20 @@ class OpenWrtApp {
 		page.querySelector(`[data-tab="${tabName}"]`).classList.add('active');
 		page.querySelector(`#tab-${tabName}`).classList.remove('hidden');
 
-		if (tabName === 'interfaces') {
-			this.loadNetworkInterfaces();
-		} else if (tabName === 'wireless') {
-			this.loadWireless();
-		} else if (tabName === 'firewall') {
-			this.loadFirewallRules();
-		} else if (tabName === 'dhcp') {
-			this.loadDHCPLeases();
-		} else if (tabName === 'startup') {
-			this.loadServices();
-		} else if (tabName === 'software') {
-			this.loadPackages();
-		}
+		const tabLoaders = {
+			interfaces: () => this.loadNetworkInterfaces(),
+			wireless: () => this.loadWireless(),
+			firewall: () => this.loadFirewallRules(),
+			dhcp: () => this.loadDHCPLeases(),
+			startup: () => this.loadServices(),
+			software: () => this.loadPackages(),
+			cron: () => this.loadCronJobs(),
+			'ssh-keys': () => this.loadSSHKeys(),
+			mounts: () => this.loadMountPoints(),
+			led: () => this.loadLEDs()
+		};
+
+		tabLoaders[tabName]?.();
 	}
 
 	async loadNetworkData() {
@@ -1467,6 +1501,446 @@ class OpenWrtApp {
 		} catch (err) {
 			console.error('Failed to remove package:', err);
 			this.showToast('Error', 'Failed to remove package', 'error');
+		}
+	}
+
+	async loadCronJobs() {
+		try {
+			const [status, result] = await this.ubusCall('file', 'read', {
+				path: '/etc/crontabs/root'
+			});
+
+			const tbody = document.querySelector('#cron-table tbody');
+
+			if (!result || !result.data) {
+				tbody.innerHTML = '<tr><td colspan="4" style="text-align: center; color: var(--steel-muted);">No cron jobs configured</td></tr>';
+				return;
+			}
+
+			const crontab = atob(result.data);
+			const lines = crontab.split('\n').filter(l => l.trim() && !l.startsWith('#'));
+
+			if (lines.length === 0) {
+				tbody.innerHTML = '<tr><td colspan="4" style="text-align: center; color: var(--steel-muted);">No cron jobs configured</td></tr>';
+				return;
+			}
+
+			const rows = lines.map((line, idx) => {
+				const disabled = line.trim().startsWith('#');
+				const actualLine = disabled ? line.trim().substring(1) : line;
+				const parts = actualLine.trim().split(/\s+/);
+				const schedule = parts.slice(0, 5).join(' ');
+				const command = parts.slice(5).join(' ');
+
+				return `
+					<tr>
+						<td>${this.escapeHtml(schedule)}</td>
+						<td style="max-width: 400px; overflow: hidden; text-overflow: ellipsis; white-space: nowrap;">${this.escapeHtml(command)}</td>
+						<td>${disabled ? '<span style="color: var(--steel-muted);">No</span>' : '<span style="color: var(--success);">Yes</span>'}</td>
+						<td>
+							<a href="#" class="action-link" data-cron-idx="${idx}">Edit</a>
+							<a href="#" class="action-link-danger" data-cron-idx="${idx}">Delete</a>
+						</td>
+					</tr>
+				`;
+			}).join('');
+
+			tbody.innerHTML = rows;
+
+			document.querySelectorAll('#cron-table .action-link').forEach(link => {
+				link.addEventListener('click', (e) => {
+					e.preventDefault();
+					const idx = parseInt(e.target.dataset.cronIdx);
+					this.openCronJob(idx);
+				});
+			});
+
+			document.querySelectorAll('#cron-table .action-link-danger').forEach(link => {
+				link.addEventListener('click', (e) => {
+					e.preventDefault();
+					const idx = parseInt(e.target.dataset.cronIdx);
+					this.deleteCronJob(idx);
+				});
+			});
+		} catch (err) {
+			console.error('Failed to load cron jobs:', err);
+			document.querySelector('#cron-table tbody').innerHTML = '<tr><td colspan="4" style="text-align: center; color: var(--steel-muted);">Failed to load cron jobs</td></tr>';
+		}
+	}
+
+	openCronJob(index = null) {
+		if (index !== null) {
+			this.ubusCall('file', 'read', { path: '/etc/crontabs/root' }).then(([status, result]) => {
+				if (result && result.data) {
+					const crontab = atob(result.data);
+					const lines = crontab.split('\n').filter(l => l.trim() && !l.startsWith('#'));
+					const line = lines[index];
+
+					if (line) {
+						const disabled = line.trim().startsWith('#');
+						const actualLine = disabled ? line.trim().substring(1) : line;
+						const parts = actualLine.trim().split(/\s+/);
+
+						document.getElementById('edit-cron-minute').value = parts[0] || '*';
+						document.getElementById('edit-cron-hour').value = parts[1] || '*';
+						document.getElementById('edit-cron-day').value = parts[2] || '*';
+						document.getElementById('edit-cron-month').value = parts[3] || '*';
+						document.getElementById('edit-cron-weekday').value = parts[4] || '*';
+						document.getElementById('edit-cron-command').value = parts.slice(5).join(' ');
+						document.getElementById('edit-cron-enabled').checked = !disabled;
+						document.getElementById('edit-cron-index').value = index;
+					}
+				}
+			});
+		} else {
+			document.getElementById('edit-cron-minute').value = '*';
+			document.getElementById('edit-cron-hour').value = '*';
+			document.getElementById('edit-cron-day').value = '*';
+			document.getElementById('edit-cron-month').value = '*';
+			document.getElementById('edit-cron-weekday').value = '*';
+			document.getElementById('edit-cron-command').value = '';
+			document.getElementById('edit-cron-enabled').checked = true;
+			document.getElementById('edit-cron-index').value = '';
+		}
+
+		document.getElementById('cron-modal').classList.remove('hidden');
+	}
+
+	closeCronJob() {
+		document.getElementById('cron-modal').classList.add('hidden');
+	}
+
+	async saveCronJob() {
+		try {
+			const minute = document.getElementById('edit-cron-minute').value.trim() || '*';
+			const hour = document.getElementById('edit-cron-hour').value.trim() || '*';
+			const day = document.getElementById('edit-cron-day').value.trim() || '*';
+			const month = document.getElementById('edit-cron-month').value.trim() || '*';
+			const weekday = document.getElementById('edit-cron-weekday').value.trim() || '*';
+			const command = document.getElementById('edit-cron-command').value.trim();
+			const enabled = document.getElementById('edit-cron-enabled').checked;
+			const index = document.getElementById('edit-cron-index').value;
+
+			if (!command) {
+				this.showToast('Error', 'Command is required', 'error');
+				return;
+			}
+
+			const [status, result] = await this.ubusCall('file', 'read', {
+				path: '/etc/crontabs/root'
+			});
+
+			let lines = [];
+			if (result && result.data) {
+				const crontab = atob(result.data);
+				lines = crontab.split('\n').filter(l => l.trim() && !l.startsWith('#'));
+			}
+
+			const cronLine = `${minute} ${hour} ${day} ${month} ${weekday} ${command}`;
+			const finalLine = enabled ? cronLine : `# ${cronLine}`;
+
+			if (index !== '') {
+				lines[parseInt(index)] = finalLine;
+			} else {
+				lines.push(finalLine);
+			}
+
+			const newCrontab = lines.join('\n') + '\n';
+
+			await this.ubusCall('file', 'write', {
+				path: '/etc/crontabs/root',
+				data: btoa(newCrontab),
+				base64: true
+			});
+
+			await this.ubusCall('file', 'exec', {
+				command: '/etc/init.d/cron',
+				params: ['restart']
+			});
+
+			this.showToast('Success', 'Cron job saved', 'success');
+			this.closeCronJob();
+			setTimeout(() => this.loadCronJobs(), 1000);
+		} catch (err) {
+			console.error('Failed to save cron job:', err);
+			this.showToast('Error', 'Failed to save cron job', 'error');
+		}
+	}
+
+	async deleteCronJob(index) {
+		if (!confirm('Delete this cron job?')) return;
+
+		try {
+			const [status, result] = await this.ubusCall('file', 'read', {
+				path: '/etc/crontabs/root'
+			});
+
+			if (!result || !result.data) {
+				this.showToast('Error', 'Failed to read crontab', 'error');
+				return;
+			}
+
+			const crontab = atob(result.data);
+			let lines = crontab.split('\n').filter(l => l.trim() && !l.startsWith('#'));
+			lines.splice(index, 1);
+
+			const newCrontab = lines.join('\n') + '\n';
+
+			await this.ubusCall('file', 'write', {
+				path: '/etc/crontabs/root',
+				data: btoa(newCrontab),
+				base64: true
+			});
+
+			await this.ubusCall('file', 'exec', {
+				command: '/etc/init.d/cron',
+				params: ['restart']
+			});
+
+			this.showToast('Success', 'Cron job deleted', 'success');
+			setTimeout(() => this.loadCronJobs(), 1000);
+		} catch (err) {
+			console.error('Failed to delete cron job:', err);
+			this.showToast('Error', 'Failed to delete cron job', 'error');
+		}
+	}
+
+	async loadSSHKeys() {
+		try {
+			const [status, result] = await this.ubusCall('file', 'read', {
+				path: '/etc/dropbear/authorized_keys'
+			});
+
+			const tbody = document.querySelector('#ssh-keys-table tbody');
+
+			if (!result || !result.data) {
+				tbody.innerHTML = '<tr><td colspan="4" style="text-align: center; color: var(--steel-muted);">No SSH keys configured</td></tr>';
+				return;
+			}
+
+			const keys = atob(result.data);
+			const lines = keys.split('\n').filter(l => l.trim() && !l.startsWith('#'));
+
+			if (lines.length === 0) {
+				tbody.innerHTML = '<tr><td colspan="4" style="text-align: center; color: var(--steel-muted);">No SSH keys configured</td></tr>';
+				return;
+			}
+
+			const rows = lines.map((line, idx) => {
+				const parts = line.trim().split(/\s+/);
+				const type = parts[0];
+				const key = parts[1];
+				const comment = parts.slice(2).join(' ') || '';
+				const keyPreview = key.substring(0, 40) + '...';
+
+				return `
+					<tr>
+						<td>${this.escapeHtml(type)}</td>
+						<td style="max-width: 400px; font-family: monospace; font-size: 12px; overflow: hidden; text-overflow: ellipsis;">${this.escapeHtml(keyPreview)}</td>
+						<td>${this.escapeHtml(comment)}</td>
+						<td>
+							<a href="#" class="action-link-danger" data-key-idx="${idx}">Delete</a>
+						</td>
+					</tr>
+				`;
+			}).join('');
+
+			tbody.innerHTML = rows;
+
+			document.querySelectorAll('#ssh-keys-table .action-link-danger').forEach(link => {
+				link.addEventListener('click', (e) => {
+					e.preventDefault();
+					const idx = parseInt(e.target.dataset.keyIdx);
+					this.deleteSSHKey(idx);
+				});
+			});
+		} catch (err) {
+			console.error('Failed to load SSH keys:', err);
+			document.querySelector('#ssh-keys-table tbody').innerHTML = '<tr><td colspan="4" style="text-align: center; color: var(--steel-muted);">Failed to load SSH keys</td></tr>';
+		}
+	}
+
+	openSSHKey() {
+		document.getElementById('edit-ssh-key-content').value = '';
+		document.getElementById('edit-ssh-key-index').value = '';
+		document.getElementById('ssh-key-modal').classList.remove('hidden');
+	}
+
+	closeSSHKey() {
+		document.getElementById('ssh-key-modal').classList.add('hidden');
+	}
+
+	async saveSSHKey() {
+		try {
+			const content = document.getElementById('edit-ssh-key-content').value.trim();
+
+			if (!content) {
+				this.showToast('Error', 'Public key is required', 'error');
+				return;
+			}
+
+			if (!content.match(/^(ssh-rsa|ssh-ed25519|ecdsa-sha2-nistp256|ssh-dss)\s+[A-Za-z0-9+\/=]+/)) {
+				this.showToast('Error', 'Invalid SSH public key format', 'error');
+				return;
+			}
+
+			const [status, result] = await this.ubusCall('file', 'read', {
+				path: '/etc/dropbear/authorized_keys'
+			});
+
+			let lines = [];
+			if (result && result.data) {
+				const keys = atob(result.data);
+				lines = keys.split('\n').filter(l => l.trim() && !l.startsWith('#'));
+			}
+
+			lines.push(content);
+
+			const newKeys = lines.join('\n') + '\n';
+
+			await this.ubusCall('file', 'write', {
+				path: '/etc/dropbear/authorized_keys',
+				data: btoa(newKeys),
+				base64: true,
+				mode: '0600'
+			});
+
+			this.showToast('Success', 'SSH key added', 'success');
+			this.closeSSHKey();
+			setTimeout(() => this.loadSSHKeys(), 1000);
+		} catch (err) {
+			console.error('Failed to save SSH key:', err);
+			this.showToast('Error', 'Failed to save SSH key', 'error');
+		}
+	}
+
+	async deleteSSHKey(index) {
+		if (!confirm('Delete this SSH key?')) return;
+
+		try {
+			const [status, result] = await this.ubusCall('file', 'read', {
+				path: '/etc/dropbear/authorized_keys'
+			});
+
+			if (!result || !result.data) {
+				this.showToast('Error', 'Failed to read keys', 'error');
+				return;
+			}
+
+			const keys = atob(result.data);
+			let lines = keys.split('\n').filter(l => l.trim() && !l.startsWith('#'));
+			lines.splice(index, 1);
+
+			const newKeys = lines.join('\n') + '\n';
+
+			await this.ubusCall('file', 'write', {
+				path: '/etc/dropbear/authorized_keys',
+				data: btoa(newKeys),
+				base64: true,
+				mode: '0600'
+			});
+
+			this.showToast('Success', 'SSH key deleted', 'success');
+			setTimeout(() => this.loadSSHKeys(), 1000);
+		} catch (err) {
+			console.error('Failed to delete SSH key:', err);
+			this.showToast('Error', 'Failed to delete SSH key', 'error');
+		}
+	}
+
+	async loadMountPoints() {
+		try {
+			const [status, result] = await this.ubusCall('file', 'exec', {
+				command: '/bin/df',
+				params: ['-h']
+			});
+
+			const tbody = document.querySelector('#mounts-table tbody');
+
+			if (!result || !result.stdout) {
+				tbody.innerHTML = '<tr><td colspan="6" style="text-align: center; color: var(--steel-muted);">Failed to load mount points</td></tr>';
+				return;
+			}
+
+			const lines = result.stdout.trim().split('\n').slice(1);
+			const mounts = lines.map(line => {
+				const parts = line.trim().split(/\s+/);
+				return {
+					device: parts[0],
+					size: parts[1],
+					used: parts[2],
+					available: parts[3],
+					percent: parts[4],
+					mountpoint: parts[5]
+				};
+			});
+
+			const rows = mounts.map(m => `
+				<tr>
+					<td style="font-family: monospace; font-size: 12px;">${this.escapeHtml(m.device)}</td>
+					<td style="font-family: monospace;">${this.escapeHtml(m.mountpoint)}</td>
+					<td>auto</td>
+					<td>${this.escapeHtml(m.size)}</td>
+					<td>${this.escapeHtml(m.used)} (${this.escapeHtml(m.percent)})</td>
+					<td>${this.escapeHtml(m.available)}</td>
+				</tr>
+			`).join('');
+
+			tbody.innerHTML = rows;
+		} catch (err) {
+			console.error('Failed to load mount points:', err);
+			document.querySelector('#mounts-table tbody').innerHTML = '<tr><td colspan="6" style="text-align: center; color: var(--steel-muted);">Failed to load mount points</td></tr>';
+		}
+	}
+
+	async loadLEDs() {
+		try {
+			const [status, result] = await this.ubusCall('file', 'exec', {
+				command: '/bin/ls',
+				params: ['/sys/class/leds/']
+			});
+
+			const tbody = document.querySelector('#led-table tbody');
+
+			if (!result || !result.stdout) {
+				tbody.innerHTML = '<tr><td colspan="3" style="text-align: center; color: var(--steel-muted);">No LEDs found</td></tr>';
+				return;
+			}
+
+			const leds = result.stdout.trim().split('\n').filter(l => l.trim());
+
+			if (leds.length === 0) {
+				tbody.innerHTML = '<tr><td colspan="3" style="text-align: center; color: var(--steel-muted);">No LEDs found</td></tr>';
+				return;
+			}
+
+			const rows = await Promise.all(leds.map(async led => {
+				const [trigStatus, trigResult] = await this.ubusCall('file', 'read', {
+					path: `/sys/class/leds/${led}/trigger`
+				});
+
+				let trigger = 'none';
+				if (trigResult && trigResult.data) {
+					const trigData = atob(trigResult.data);
+					const match = trigData.match(/\[([^\]]+)\]/);
+					trigger = match ? match[1] : 'none';
+				}
+
+				return `
+					<tr>
+						<td>${this.escapeHtml(led)}</td>
+						<td>${this.escapeHtml(trigger)}</td>
+						<td>
+							<span style="color: var(--steel-muted); font-size: 12px;">View only</span>
+						</td>
+					</tr>
+				`;
+			}));
+
+			tbody.innerHTML = rows.join('');
+		} catch (err) {
+			console.error('Failed to load LEDs:', err);
+			document.querySelector('#led-table tbody').innerHTML = '<tr><td colspan="3" style="text-align: center; color: var(--steel-muted);">Failed to load LEDs</td></tr>';
 		}
 	}
 
