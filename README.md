@@ -113,7 +113,7 @@ Uses OpenWrt's native authentication system. Same security model as LuCI:
 |---------|-------|------|
 | Authentication | ubus sessions | ubus sessions |
 | Authorization | rpcd ACLs | rpcd ACLs |
-| Attack surface | 3 files | 200+ files |
+| Execution | Client-side only | Server-side Lua |
 
 All operations validated server-side. No privilege escalation paths.
 
