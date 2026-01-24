@@ -1,0 +1,16 @@
+{
+	"based-openwrt": {
+		"description": "ACL permissions for Based OpenWrt interface",
+		"read": {
+			"file": {
+				"/usr/lib/opkg/status": [ "read" ],
+				"/var/lib/opkg/status": [ "read" ],
+				"/proc/net/dev": [ "read" ],
+				"/proc/net/arp": [ "read" ]
+			},
+			"ubus": {
+				"network.interface": [ "dump" ]
+			}
+		}
+	}
+}

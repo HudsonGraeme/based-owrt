@@ -12,6 +12,8 @@
 
 </div>
 
+![Based OpenWrt Dashboard](https://github.com/user-attachments/assets/dc150d3c-75fc-480b-a0bd-10b67cdc6226)
+
 ---
 
 ## What is this?
@@ -87,6 +89,17 @@ uci set uhttpd.main.home='/www'
 uci commit uhttpd
 /etc/init.d/uhttpd restart
 ```
+
+**Configure permissions** (required for full dashboard functionality):
+
+```bash
+scp rpcd-acl.json root@192.168.1.1:/usr/share/rpcd/acl.d/based-openwrt.json
+ssh root@192.168.1.1 "/etc/init.d/rpcd restart"
+```
+
+This grants read-only permissions for:
+- WAN/LAN status display on dashboard
+- Package list viewing in Software tab
 
 Access at `http://192.168.1.1/custom/` and login with your root credentials.
 

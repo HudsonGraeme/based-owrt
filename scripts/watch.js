@@ -43,10 +43,26 @@ const watcher = chokidar.watch('custom', {
 	}
 });
 
+const aclWatcher = chokidar.watch('rpcd-acl.json', {
+	persistent: true,
+	ignoreInitial: true,
+	awaitWriteFinish: {
+		stabilityThreshold: 300,
+		pollInterval: 100
+	}
+});
+
 watcher.on('all', (event, path) => {
 	console.log(`[${event}] ${path}`);
 	if (event === 'change' || event === 'add') {
 		deploy();
+	}
+});
+
+aclWatcher.on('all', (event, path) => {
+	console.log(`[${event}] ${path}`);
+	if (event === 'change' || event === 'add') {
+		deployACL();
 	}
 });
 
@@ -64,4 +80,17 @@ function deploy() {
 	}
 }
 
-console.log('Ready. Save files in custom/ to trigger deploy.');
+function deployACL() {
+	try {
+		console.log(`Deploying ACL to ${targetName}...`);
+
+		execSync(`cat rpcd-acl.json | ${SSH} "cat > /usr/share/rpcd/acl.d/based-openwrt.json"`, { stdio: 'pipe' });
+		execSync(`${SSH} "/etc/init.d/rpcd restart"`, { stdio: 'pipe' });
+
+		console.log('ACL deployed and rpcd restarted\n');
+	} catch (err) {
+		console.error('ACL deploy failed:', err.message);
+	}
+}
+
+console.log('Ready. Save files in custom/ or rpcd-acl.json to trigger deploy.');
