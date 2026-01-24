@@ -113,7 +113,6 @@ Uses OpenWrt's native authentication system. Same security model as LuCI:
 |---------|-------|------|
 | Authentication | ubus sessions | ubus sessions |
 | Authorization | rpcd ACLs | rpcd ACLs |
-| Execution | Client-side only | Server-side Lua |
 
 All operations validated server-side. No privilege escalation paths.
 
@@ -128,18 +127,16 @@ All operations validated server-side. No privilege escalation paths.
 pnpm dev
 
 # Physical router
-pnpm dev:physical 192.168.1.35
+pnpm dev:physical 192.168.1.1
 ```
 
 **Project structure:**
 
 ```
 custom/
-├── index.html    (14KB) - Application shell
-├── app.js        (53KB) - Features & logic
-└── app.css       (13KB) - Styling
-
-Total: 80KB → 10KB gzipped
+├── index.hKB) - Application shell
+├── app.    B) - Features & logic
+└── app.css B) - Stylingd
 ```
 
 **Adding features:**
@@ -148,20 +145,6 @@ Total: 80KB → 10KB gzipped
 // All ubus calls use this pattern:
 const [status, result] = await this.ubusCall('system', 'info', {});
 ```
-
----
-
-## Comparison
-
-| | Based | LuCI |
-|---|---|---|
-| **Bundle** | 10KB gzipped | 500KB+ |
-| **Files** | 3 static | 200+ Lua |
-| **Stack** | Vanilla JS | Lua templates |
-| **Install** | Copy 3 files | Package manager |
-| **Upgrade** | Copy 3 files | `opkg update` |
-
-Both are equally secure—identical auth & permission systems.
 
 ---
 
