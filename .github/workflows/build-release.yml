@@ -100,14 +100,16 @@ jobs:
             exit 1
           fi
           echo "package_path=$IPK_FILE" >> $GITHUB_OUTPUT
-          echo "package_name=$(basename $IPK_FILE)" >> $GITHUB_OUTPUT
+          ARCH_SUFFIX="${{ matrix.arch }}"
+          NEW_NAME="based-ui_0.1.0-r1_${ARCH_SUFFIX}.ipk"
+          echo "package_name=$NEW_NAME" >> $GITHUB_OUTPUT
+
+      - name: Rename package
+        working-directory: ${{ matrix.sdk_name }}
+        run: |
+          mv ${{ steps.find_package.outputs.package_path }} /tmp/${{ steps.find_package.outputs.package_name }}
 
       - name: Upload to release
-        uses: actions/upload-release-asset@v1
-        env:
-          GITHUB_TOKEN: ${{ secrets.GITHUB_TOKEN }}
+        uses: softprops/action-gh-release@v2
         with:
-          upload_url: ${{ github.event.release.upload_url }}
-          asset_path: ${{ matrix.sdk_name }}/${{ steps.find_package.outputs.package_path }}
-          asset_name: ${{ steps.find_package.outputs.package_name }}
-          asset_content_type: application/vnd.debian.binary-package
+          files: /tmp/${{ steps.find_package.outputs.package_name }}
