@@ -27,18 +27,25 @@ export default class SystemModule {
 		}
 	}
 
+	async fetchSystemInfo() {
+		const [status, boardInfo] = await this.core.ubusCall('system', 'board', {});
+		if (status !== 0) throw new Error('Failed to fetch system info');
+		return boardInfo;
+	}
+
+	updateHostnameInput(hostname) {
+		const hostnameInput = document.getElementById('system-hostname');
+		if (hostnameInput) {
+			hostnameInput.value = hostname || '';
+		}
+	}
+
 	async loadSystemInfo() {
 		if (!this.core.isFeatureEnabled('system')) return;
 
 		try {
-			const [status, boardInfo] = await this.core.ubusCall('system', 'board', {});
-
-			if (status === 0 && boardInfo) {
-				const hostnameInput = document.getElementById('system-hostname');
-				if (hostnameInput) {
-					hostnameInput.value = boardInfo.hostname || '';
-				}
-			}
+			const systemInfo = await this.fetchSystemInfo();
+			this.updateHostnameInput(systemInfo.hostname);
 		} catch (err) {
 			console.error('Failed to load system info:', err);
 		}
@@ -56,44 +63,16 @@ export default class SystemModule {
 		}
 	}
 
-	async loadPackages() {
-		if (!this.core.isFeatureEnabled('packages')) return;
+	async fetchPackages() {
+		const [status, result] = await this.core.ubusCall('file', 'read', {
+			path: '/usr/lib/opkg/status'
+		});
 
-		const tbody = document.querySelector('#packages-table tbody');
-
-		this.core.showSkeleton('packages-table');
-
-		try {
-			const [status, result] = await this.core.ubusCall('file', 'read', {
-				path: '/usr/lib/opkg/status'
-			});
-
-			if (status !== 0 || !result?.data) {
-				this.core.renderEmptyTable(tbody, 3, 'No packages found');
-				return;
-			}
-
-			const packages = this.parseOpkgStatus(result.data);
-			const totalPackages = packages.length;
-			const rows = packages.slice(0, 100).map(pkg => `
-				<tr>
-					<td>${this.core.escapeHtml(pkg.name)}</td>
-					<td>${this.core.escapeHtml(pkg.version)}</td>
-					<td>${this.core.renderBadge('success', 'Installed')}</td>
-				</tr>
-			`).join('');
-
-			tbody.innerHTML = rows;
-
-			if (totalPackages > 100) {
-				const messageRow = `<tr><td colspan="3" style="text-align: center; color: var(--steel-muted);">Showing 100 of ${totalPackages} packages</td></tr>`;
-				tbody.insertAdjacentHTML('beforeend', messageRow);
-			}
-		} catch (err) {
-			console.error('Failed to load packages:', err);
-		} finally {
-			this.core.hideSkeleton('packages-table');
+		if (status !== 0 || !result?.data) {
+			throw new Error('Failed to fetch packages');
 		}
+
+		return result.data;
 	}
 
 	parseOpkgStatus(data) {
@@ -116,5 +95,60 @@ export default class SystemModule {
 		}
 
 		return packages;
+	}
+
+	renderPackageRow(pkg) {
+		return `
+			<tr>
+				<td>${this.core.escapeHtml(pkg.name)}</td>
+				<td>${this.core.escapeHtml(pkg.version)}</td>
+				<td>${this.core.renderBadge('success', 'Installed')}</td>
+			</tr>
+		`;
+	}
+
+	renderPackagesTable(packages, limit = 100) {
+		const displayedPackages = packages.slice(0, limit);
+		const rows = displayedPackages.map(pkg => this.renderPackageRow(pkg)).join('');
+
+		let html = rows;
+
+		if (packages.length > limit) {
+			html += `<tr><td colspan="3" style="text-align: center; color: var(--steel-muted);">Showing ${limit} of ${packages.length} packages</td></tr>`;
+		}
+
+		return html;
+	}
+
+	updatePackagesTable(packages) {
+		const tbody = document.querySelector('#packages-table tbody');
+		if (!tbody) return;
+
+		if (packages.length === 0) {
+			this.core.renderEmptyTable(tbody, 3, 'No packages found');
+			return;
+		}
+
+		tbody.innerHTML = this.renderPackagesTable(packages);
+	}
+
+	async loadPackages() {
+		if (!this.core.isFeatureEnabled('packages')) return;
+
+		this.core.showSkeleton('packages-table');
+
+		try {
+			const data = await this.fetchPackages();
+			const packages = this.parseOpkgStatus(data);
+			this.updatePackagesTable(packages);
+		} catch (err) {
+			console.error('Failed to load packages:', err);
+			const tbody = document.querySelector('#packages-table tbody');
+			if (tbody) {
+				this.core.renderEmptyTable(tbody, 3, 'Failed to load packages');
+			}
+		} finally {
+			this.core.hideSkeleton('packages-table');
+		}
 	}
 }

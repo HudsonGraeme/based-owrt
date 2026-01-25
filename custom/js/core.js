@@ -100,10 +100,7 @@ export class OpenWrtCore {
 
 	async loadFeatures() {
 		try {
-			const [status, result] = await this.ubusCall('uci', 'get', {
-				config: 'based',
-				section: 'features'
-			});
+			const [status, result] = await this.uciGet('based', 'features');
 
 			if (status === 0 && result && result.values) {
 				this.features = result.values;
