@@ -1336,6 +1336,10 @@
 		</div>
 	</div>
 
-	<script src="app.js"></script>
+	<script type="module">
+		import { OpenWrtCore } from './js/core.js';
+		window.app = new OpenWrtCore();
+		window.app.init();
+	</script>
 </body>
 </html>

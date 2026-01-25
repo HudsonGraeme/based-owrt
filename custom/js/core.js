@@ -1,0 +1,424 @@
+export class OpenWrtCore {
+	constructor() {
+		this.sessionId = localStorage.getItem('ubus_session');
+		this.features = {};
+		this.modules = new Map();
+	}
+
+	async init() {
+		if (this.sessionId) {
+			const valid = await this.validateSession();
+			if (valid) {
+				await this.loadFeatures();
+				await this.loadModules();
+				this.showMainView();
+				this.startApplication();
+			} else {
+				const savedCreds = this.getSavedCredentials();
+				if (savedCreds) {
+					await this.autoLogin(savedCreds.username, savedCreds.password);
+				} else {
+					this.showLoginView();
+				}
+			}
+		} else {
+			const savedCreds = this.getSavedCredentials();
+			if (savedCreds) {
+				await this.autoLogin(savedCreds.username, savedCreds.password);
+			} else {
+				this.showLoginView();
+			}
+		}
+	}
+
+	async loadFeatures() {
+		try {
+			const [status, result] = await this.ubusCall('uci', 'get', {
+				config: 'based',
+				section: 'features'
+			});
+
+			if (status === 0 && result && result.values) {
+				this.features = result.values;
+			} else {
+				this.features = this.getDefaultFeatures();
+			}
+		} catch (err) {
+			console.log('Feature config not found, using defaults');
+			this.features = this.getDefaultFeatures();
+		}
+	}
+
+	getDefaultFeatures() {
+		return {
+			dashboard: '1',
+			network: '1',
+			wireless: '1',
+			firewall: '1',
+			dhcp: '1',
+			dns: '1',
+			wireguard: '1',
+			qos: '1',
+			ddns: '1',
+			diagnostics: '1',
+			system: '1',
+			backup: '1',
+			packages: '1',
+			services: '1',
+			ssh_keys: '1',
+			storage: '1',
+			leds: '1',
+			firmware: '1'
+		};
+	}
+
+	isFeatureEnabled(feature) {
+		return this.features[feature] === '1';
+	}
+
+	async loadModules() {
+		const moduleMap = {
+			dashboard: './js/modules/dashboard.js',
+			network: './js/modules/network.js',
+			system: './js/modules/system.js',
+			vpn: './js/modules/vpn.js',
+			services: './js/modules/services.js'
+		};
+
+		for (const [name, path] of Object.entries(moduleMap)) {
+			if (this.shouldLoadModule(name)) {
+				try {
+					const module = await import(path);
+					this.modules.set(name, new module.default(this));
+				} catch (err) {
+					console.error(`Failed to load module ${name}:`, err);
+				}
+			}
+		}
+	}
+
+	shouldLoadModule(moduleName) {
+		const moduleFeatures = {
+			dashboard: ['dashboard'],
+			network: ['network', 'wireless', 'firewall', 'dhcp', 'dns', 'diagnostics'],
+			system: ['system', 'backup', 'packages', 'services', 'ssh_keys', 'storage', 'leds', 'firmware'],
+			vpn: ['wireguard'],
+			services: ['qos', 'ddns']
+		};
+
+		const features = moduleFeatures[moduleName] || [];
+		return features.some(f => this.isFeatureEnabled(f));
+	}
+
+	startApplication() {
+		this.attachEventListeners();
+
+		if (this.modules.has('dashboard')) {
+			this.modules.get('dashboard').load();
+			this.startPolling();
+		}
+	}
+
+	attachEventListeners() {
+		document.getElementById('logout-btn')?.addEventListener('click', () => this.logout());
+
+		document.querySelectorAll('.nav-item').forEach(item => {
+			item.addEventListener('click', (e) => {
+				const tab = e.currentTarget.getAttribute('data-tab');
+				this.showTab(tab);
+			});
+		});
+	}
+
+	showTab(tab) {
+		document.querySelectorAll('.nav-item').forEach(item => {
+			item.classList.toggle('active', item.getAttribute('data-tab') === tab);
+		});
+
+		document.querySelectorAll('.tab-content').forEach(content => {
+			content.classList.toggle('active', content.id === `${tab}-tab`);
+		});
+
+		const moduleMap = {
+			'network': 'network',
+			'system': 'system',
+			'wireguard': 'vpn',
+			'qos': 'services',
+			'ddns': 'services'
+		};
+
+		const moduleName = moduleMap[tab];
+		if (moduleName && this.modules.has(moduleName)) {
+			this.modules.get(moduleName).handleTabChange(tab);
+		}
+	}
+
+	startPolling() {
+		if (this.pollInterval) clearInterval(this.pollInterval);
+
+		this.pollInterval = setInterval(() => {
+			if (this.modules.has('dashboard')) {
+				this.modules.get('dashboard').update();
+			}
+		}, 3000);
+	}
+
+	stopPolling() {
+		if (this.pollInterval) {
+			clearInterval(this.pollInterval);
+			this.pollInterval = null;
+		}
+	}
+
+	getSavedCredentials() {
+		try {
+			const saved = localStorage.getItem('saved_credentials');
+			return saved ? JSON.parse(atob(saved)) : null;
+		} catch {
+			return null;
+		}
+	}
+
+	saveCredentials(username, password) {
+		const creds = btoa(JSON.stringify({ username, password }));
+		localStorage.setItem('saved_credentials', creds);
+	}
+
+	clearSavedCredentials() {
+		localStorage.removeItem('saved_credentials');
+	}
+
+	async autoLogin(username, password) {
+		try {
+			await this.login(username, password, true);
+		} catch (err) {
+			console.error('Auto-login failed:', err);
+			this.clearSavedCredentials();
+			this.showLoginView();
+		}
+	}
+
+	async login(username, password, rememberMe = false) {
+		const response = await fetch('/ubus', {
+			method: 'POST',
+			headers: { 'Content-Type': 'application/json' },
+			body: JSON.stringify({
+				jsonrpc: '2.0',
+				id: 1,
+				method: 'call',
+				params: ['00000000000000000000000000000000', 'session', 'login', {
+					username,
+					password
+				}]
+			})
+		});
+
+		const data = await response.json();
+
+		if (data.result && data.result[1] && data.result[1].ubus_rpc_session) {
+			this.sessionId = data.result[1].ubus_rpc_session;
+			localStorage.setItem('ubus_session', this.sessionId);
+
+			if (rememberMe) {
+				this.saveCredentials(username, password);
+			}
+
+			await this.loadFeatures();
+			await this.loadModules();
+			this.showMainView();
+			this.startApplication();
+		} else {
+			throw new Error('Login failed');
+		}
+	}
+
+	async validateSession() {
+		try {
+			const [status] = await this.ubusCall('session', 'access', {});
+			return status === 0;
+		} catch {
+			return false;
+		}
+	}
+
+	async logout() {
+		try {
+			await this.ubusCall('session', 'destroy', {});
+		} catch {}
+
+		this.stopPolling();
+		localStorage.removeItem('ubus_session');
+		this.sessionId = null;
+		this.showLoginView();
+	}
+
+	showLoginView() {
+		document.getElementById('login-view').classList.remove('hidden');
+		document.getElementById('main-view').classList.add('hidden');
+
+		const loginForm = document.getElementById('login-form');
+		const rememberCheckbox = document.getElementById('remember-me');
+
+		loginForm.onsubmit = async (e) => {
+			e.preventDefault();
+			const username = document.getElementById('username').value;
+			const password = document.getElementById('password').value;
+			const rememberMe = rememberCheckbox?.checked || false;
+
+			try {
+				await this.login(username, password, rememberMe);
+			} catch (err) {
+				console.error('Login error:', err);
+				this.showToast('Login failed: ' + err.message, 'error');
+			}
+		};
+	}
+
+	showMainView() {
+		document.getElementById('login-view').classList.add('hidden');
+		document.getElementById('main-view').classList.remove('hidden');
+	}
+
+	async ubusCall(object, method, params = {}) {
+		const response = await fetch('/ubus', {
+			method: 'POST',
+			headers: { 'Content-Type': 'application/json' },
+			body: JSON.stringify({
+				jsonrpc: '2.0',
+				id: Math.random(),
+				method: 'call',
+				params: [this.sessionId || '00000000000000000000000000000000', object, method, params]
+			})
+		});
+
+		const data = await response.json();
+		if (data.error) throw new Error(data.error.message || 'ubus call failed');
+		return data.result;
+	}
+
+	async uciGet(config, section = null) {
+		const params = { config };
+		if (section) params.section = section;
+		return await this.ubusCall('uci', 'get', params);
+	}
+
+	async uciSet(config, section, values) {
+		return await this.ubusCall('uci', 'set', { config, section, values });
+	}
+
+	async uciAdd(config, type, name, values) {
+		return await this.ubusCall('uci', 'add', { config, type, name, values });
+	}
+
+	async uciDelete(config, section) {
+		return await this.ubusCall('uci', 'delete', { config, section });
+	}
+
+	async uciCommit(config) {
+		return await this.ubusCall('uci', 'commit', { config });
+	}
+
+	async serviceReload(service) {
+		return await this.ubusCall('file', 'exec', {
+			command: `/etc/init.d/${service}`,
+			params: ['reload']
+		});
+	}
+
+	openModal(modalId) {
+		document.getElementById(modalId)?.classList.remove('hidden');
+	}
+
+	closeModal(modalId) {
+		document.getElementById(modalId)?.classList.add('hidden');
+	}
+
+	setupModal(modalId, openBtnId, closeBtnId, cancelBtnId, saveBtnId, saveHandler) {
+		if (openBtnId) {
+			document.getElementById(openBtnId)?.addEventListener('click', () => this.openModal(modalId));
+		}
+		if (closeBtnId) {
+			document.getElementById(closeBtnId)?.addEventListener('click', () => this.closeModal(modalId));
+		}
+		if (cancelBtnId) {
+			document.getElementById(cancelBtnId)?.addEventListener('click', () => this.closeModal(modalId));
+		}
+		if (saveBtnId && saveHandler) {
+			document.getElementById(saveBtnId)?.addEventListener('click', saveHandler);
+		}
+	}
+
+	renderEmptyTable(tbody, colspan, message) {
+		tbody.innerHTML = `<tr><td colspan="${colspan}" style="text-align: center; color: var(--steel-muted);">${message}</td></tr>`;
+	}
+
+	renderBadge(type, text) {
+		return `<span class="badge badge-${type}">${text}</span>`;
+	}
+
+	renderStatusBadge(condition, trueText = 'ENABLED', falseText = 'DISABLED') {
+		return condition ? this.renderBadge('success', trueText) : this.renderBadge('error', falseText);
+	}
+
+	renderActionButtons(editFn, deleteFn, id) {
+		return `
+			<div class="action-buttons">
+				<button class="btn-icon btn-edit" onclick="${editFn}('${id}')">
+					<svg viewBox="0 0 20 20" fill="currentColor"><path d="M13.586 3.586a2 2 0 112.828 2.828l-.793.793-2.828-2.828.793-.793zM11.379 5.793L3 14.172V17h2.828l8.38-8.379-2.83-2.828z"/></svg>
+				</button>
+				<button class="btn-icon btn-delete" onclick="${deleteFn}('${id}')">
+					<svg viewBox="0 0 20 20" fill="currentColor"><path fill-rule="evenodd" d="M9 2a1 1 0 00-.894.553L7.382 4H4a1 1 0 000 2v10a2 2 0 002 2h8a2 2 0 002-2V6a1 1 0 100-2h-3.382l-.724-1.447A1 1 0 0011 2H9zM7 8a1 1 0 012 0v6a1 1 0 11-2 0V8zm5-1a1 1 0 00-1 1v6a1 1 0 102 0V8a1 1 0 00-1-1z" clip-rule="evenodd"/></svg>
+				</button>
+			</div>
+		`;
+	}
+
+	showToast(message, type = 'info') {
+		const toast = document.createElement('div');
+		toast.className = `toast toast-${type}`;
+		toast.textContent = message;
+		document.body.appendChild(toast);
+
+		setTimeout(() => toast.classList.add('show'), 100);
+		setTimeout(() => {
+			toast.classList.remove('show');
+			setTimeout(() => toast.remove(), 300);
+		}, 3000);
+	}
+
+	formatBytes(bytes) {
+		if (bytes === 0) return '0 B';
+		const k = 1024;
+		const sizes = ['B', 'KB', 'MB', 'GB'];
+		const i = Math.floor(Math.log(bytes) / Math.log(k));
+		return parseFloat((bytes / Math.pow(k, i)).toFixed(2)) + ' ' + sizes[i];
+	}
+
+	formatUptime(seconds) {
+		const days = Math.floor(seconds / 86400);
+		const hours = Math.floor((seconds % 86400) / 3600);
+		const minutes = Math.floor((seconds % 3600) / 60);
+		return `${days}d ${hours}h ${minutes}m`;
+	}
+
+	formatMemory(mem) {
+		const total = (mem.total / 1024 / 1024).toFixed(0);
+		const free = (mem.free / 1024 / 1024).toFixed(0);
+		const used = total - free;
+		const percent = ((used / total) * 100).toFixed(0);
+		return `${used}MB / ${total}MB (${percent}%)`;
+	}
+
+	formatRate(kbps) {
+		const mbps = (kbps * 8) / 1024;
+		if (mbps < 0.01) return '0 Mbps';
+		if (mbps < 1) return `${mbps.toFixed(2)} Mbps`;
+		return `${mbps.toFixed(1)} Mbps`;
+	}
+
+	escapeHtml(text) {
+		const div = document.createElement('div');
+		div.textContent = text;
+		return div.innerHTML;
+	}
+}

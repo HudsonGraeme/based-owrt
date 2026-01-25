@@ -29,11 +29,23 @@ endef
 define Package/based-ui/install
 	$(INSTALL_DIR) $(1)/www/custom
 	$(INSTALL_DATA) ./custom/index.html $(1)/www/custom/
-	$(INSTALL_DATA) ./custom/app.js $(1)/www/custom/
 	$(INSTALL_DATA) ./custom/app.css $(1)/www/custom/
+
+	$(INSTALL_DIR) $(1)/www/custom/js
+	$(INSTALL_DATA) ./custom/js/core.js $(1)/www/custom/js/
+
+	$(INSTALL_DIR) $(1)/www/custom/js/modules
+	$(INSTALL_DATA) ./custom/js/modules/dashboard.js $(1)/www/custom/js/modules/
+	$(INSTALL_DATA) ./custom/js/modules/network.js $(1)/www/custom/js/modules/
+	$(INSTALL_DATA) ./custom/js/modules/system.js $(1)/www/custom/js/modules/
+	$(INSTALL_DATA) ./custom/js/modules/vpn.js $(1)/www/custom/js/modules/
+	$(INSTALL_DATA) ./custom/js/modules/services.js $(1)/www/custom/js/modules/
 
 	$(INSTALL_DIR) $(1)/usr/share/rpcd/acl.d
 	$(INSTALL_DATA) ./rpcd-acl.json $(1)/usr/share/rpcd/acl.d/based-openwrt.json
+
+	$(INSTALL_DIR) $(1)/etc/config
+	$(INSTALL_CONF) ./files/based.config $(1)/etc/config/based
 endef
 
 define Package/based-ui/postinst

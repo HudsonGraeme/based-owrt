@@ -33,16 +33,57 @@ pnpm dev:physical 192.168.1.35
 
 ```
 custom/
-├── index.html - UI structure + modals
-├── app.js     - App logic + API calls
-└── app.css    - Dark glassmorphic theme
+├── index.html         - UI structure + modals
+├── app.css            - Dark glassmorphic theme
+├── js/
+│   ├── core.js        - Core: auth, ubus, UCI, utilities, feature flags
+│   └── modules/
+│       ├── dashboard.js  - Dashboard stats and graphs
+│       ├── network.js    - Network interfaces, wireless, firewall, DHCP, DNS
+│       ├── system.js     - System settings, packages, services
+│       ├── vpn.js        - WireGuard VPN configuration
+│       └── services.js   - QoS and DDNS
 
 scripts/
 ├── watch.js           - Auto-deploy on file changes
 ├── setup-qemu.sh      - Download OpenWrt image
 ├── start-vm.sh        - Start QEMU VM
 └── quick-start.sh     - Automated setup
+
+files/
+└── based.config       - UCI feature flag configuration
 ```
+
+### Modular Architecture
+
+Based uses ES6 modules for better organization and conditional feature loading:
+
+**Core (`core.js`):**
+- Authentication and session management
+- ubus/UCI API wrappers
+- Feature flag loading from `/etc/config/based`
+- Module loading and initialization
+- Shared utilities (formatting, toasts, modals)
+
+**Modules:**
+- Loaded conditionally based on enabled features
+- Each module handles a specific feature area
+- Modules register with core and respond to tab changes
+
+**Feature Flags:**
+
+Edit `/etc/config/based` to enable/disable features:
+
+```uci
+config ui 'features'
+	option dashboard '1'
+	option network '1'
+	option firewall '1'
+	option dhcp '0'     # Disable DHCP tab
+	option wireguard '0' # Disable WireGuard
+```
+
+Presets available: `full_router` (default), `ap_switch` (Layer 2), `minimal` (dashboard only)
 
 ### Key Patterns
 

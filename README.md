@@ -156,9 +156,11 @@ pnpm dev:physical 192.168.1.1
 
 ```
 custom/
-├── index.html - Application shell
-├── app.js     - Features & logic
-└── app.css    - Styling
+├── index.html    - Application shell
+├── app.css       - Styling
+└── js/
+    ├── core.js   - Core functionality
+    └── modules/  - Feature modules (dashboard, network, system, vpn, services)
 ```
 
 **Adding features:**

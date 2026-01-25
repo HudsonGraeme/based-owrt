@@ -70,9 +70,17 @@ function deploy() {
 	try {
 		console.log(`Deploying to ${targetName}...`);
 
+		execSync(`${SSH} "mkdir -p /www/custom/js/modules"`, { stdio: 'pipe' });
+
 		execSync(`cat custom/index.html | ${SSH} "cat > /www/custom/index.html"`, { stdio: 'pipe' });
-		execSync(`cat custom/app.js | ${SSH} "cat > /www/custom/app.js"`, { stdio: 'pipe' });
 		execSync(`cat custom/app.css | ${SSH} "cat > /www/custom/app.css"`, { stdio: 'pipe' });
+
+		execSync(`cat custom/js/core.js | ${SSH} "cat > /www/custom/js/core.js"`, { stdio: 'pipe' });
+		execSync(`cat custom/js/modules/dashboard.js | ${SSH} "cat > /www/custom/js/modules/dashboard.js"`, { stdio: 'pipe' });
+		execSync(`cat custom/js/modules/network.js | ${SSH} "cat > /www/custom/js/modules/network.js"`, { stdio: 'pipe' });
+		execSync(`cat custom/js/modules/system.js | ${SSH} "cat > /www/custom/js/modules/system.js"`, { stdio: 'pipe' });
+		execSync(`cat custom/js/modules/vpn.js | ${SSH} "cat > /www/custom/js/modules/vpn.js"`, { stdio: 'pipe' });
+		execSync(`cat custom/js/modules/services.js | ${SSH} "cat > /www/custom/js/modules/services.js"`, { stdio: 'pipe' });
 
 		console.log('Deployed successfully\n');
 	} catch (err) {

@@ -9,7 +9,8 @@
 				"/proc/net/arp": [ "read" ]
 			},
 			"ubus": {
-				"network.interface": [ "dump" ]
+				"network.interface": [ "dump" ],
+				"uci": [ "get" ]
 			}
 		}
 	}
