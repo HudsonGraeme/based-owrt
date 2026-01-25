@@ -71,8 +71,9 @@ jobs:
 
       - name: Copy package files
         run: |
+          VERSION=${GITHUB_REF#refs/tags/}
           mkdir -p ${{ matrix.sdk_name }}/package/based-ui
-          cp Makefile ${{ matrix.sdk_name }}/package/based-ui/
+          sed "s/PKG_VERSION:=.*/PKG_VERSION:=$VERSION/" Makefile > ${{ matrix.sdk_name }}/package/based-ui/Makefile
           cp -r dist ${{ matrix.sdk_name }}/package/based-ui/
           cp rpcd-acl.json ${{ matrix.sdk_name }}/package/based-ui/
           cp -r files ${{ matrix.sdk_name }}/package/based-ui/
@@ -103,8 +104,9 @@ jobs:
             exit 1
           fi
           echo "package_path=$IPK_FILE" >> $GITHUB_OUTPUT
+          VERSION=${GITHUB_REF#refs/tags/}
           ARCH_SUFFIX="${{ matrix.arch }}"
-          NEW_NAME="based-ui_0.1.0-r1_${ARCH_SUFFIX}.ipk"
+          NEW_NAME="based-ui_${VERSION}-r1_${ARCH_SUFFIX}.ipk"
           echo "package_name=$NEW_NAME" >> $GITHUB_OUTPUT
 
       - name: Rename package
