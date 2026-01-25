@@ -71,7 +71,25 @@ scp -r custom/* root@192.168.1.1:/www/custom/
 
 ## Installation
 
-### Option 1: Package (Recommended)
+### Option 1: Desktop App (Zero Router Setup)
+
+Download for your platform from [Releases](https://github.com/HudsonGraeme/based-owrt/releases/latest):
+
+- **macOS**: `.dmg` (Intel & Apple Silicon)
+- **Windows**: `.exe` installer
+- **Linux**: `.AppImage` or `.deb`
+
+**No installation on router required.** The desktop app connects directly to your router's ubus API over your local network.
+
+1. Download and install the app
+2. Launch "Based Router Manager"
+3. Enter your router IP (e.g., `192.168.1.1`)
+4. Login with root credentials
+5. Done
+
+Works with any stock OpenWrt router. No packages to install, no SSH required.
+
+### Option 2: IPK Package (On-Router Install)
 
 Download the ipk for your architecture from [Releases](https://github.com/HudsonGraeme/based-owrt/releases/latest):
 
@@ -84,7 +102,7 @@ Available architectures: x86_64, ramips/mt7621, ath79, mediatek/filogic, bcm27xx
 
 Replace `VERSION_ARCH` with your specific file from the releases page.
 
-### Option 2: Manual Install
+### Option 3: Manual Install
 
 **Quick start:**
 
@@ -142,7 +160,7 @@ All operations validated server-side. No privilege escalation paths.
 
 ## Development
 
-**Auto-deploy on save:**
+**Web development (router-based):**
 
 ```bash
 # QEMU VM
@@ -150,6 +168,16 @@ pnpm dev
 
 # Physical router
 pnpm dev:physical 192.168.1.1
+```
+
+**Desktop app development:**
+
+```bash
+# Run desktop app in dev mode
+pnpm tauri:dev
+
+# Build desktop app
+pnpm tauri:build
 ```
 
 **Project structure:**

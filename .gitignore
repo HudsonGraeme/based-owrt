@@ -9,3 +9,7 @@ vm/
 pnpm-lock.yaml
 build/
 dist/
+
+# Tauri
+src-tauri/target/
+src-tauri/Cargo.lock
