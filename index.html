@@ -120,7 +120,7 @@ Jan 25 12:37:22 OpenWrt daemon.notice netifd: Interface 'wan' is now up`
 								result = [0, { data: mockData.packages }];
 							}
 						} else if (object === 'file' && method === 'exec') {
-							if (params.command === '/usr/libexec/syslog-wrapper') {
+							if (params.command === '/usr/libexec/syslog-wrapper' && Array.isArray(params.params)) {
 								result = [0, { stdout: mockData.syslog }];
 							}
 						} else if (object === 'uci' && method === 'get') {

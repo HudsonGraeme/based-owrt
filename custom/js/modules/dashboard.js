@@ -281,7 +281,8 @@ export default class DashboardModule {
 
 	async fetchSystemLog() {
 		const [status, result] = await this.core.ubusCall('file', 'exec', {
-			command: '/usr/libexec/syslog-wrapper'
+			command: '/usr/libexec/syslog-wrapper',
+			params: []
 		});
 		if (status !== 0 || !result?.stdout) {
 			throw new Error('Failed to fetch system log');
