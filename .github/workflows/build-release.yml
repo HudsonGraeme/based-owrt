@@ -80,6 +80,11 @@ jobs:
           ./scripts/feeds update -a
           ./scripts/feeds install -a
 
+      - name: Configure SDK
+        working-directory: ${{ matrix.sdk_name }}
+        run: |
+          make defconfig
+
       - name: Build package
         working-directory: ${{ matrix.sdk_name }}
         run: |
