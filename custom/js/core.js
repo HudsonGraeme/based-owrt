@@ -15,7 +15,16 @@ export class OpenWrtCore {
 		window.location.hash = path;
 	}
 
-	handleRouteChange() {
+	getModuleForRoute(basePath) {
+		const routeModuleMap = {
+			'dashboard': 'dashboard',
+			'network': 'network',
+			'system': 'system'
+		};
+		return routeModuleMap[basePath];
+	}
+
+	async handleRouteChange() {
 		if (!this.sessionId) return;
 
 		const hash = window.location.hash.slice(1) || '/dashboard';
@@ -28,18 +37,34 @@ export class OpenWrtCore {
 		const activeLink = document.querySelector(`.nav a[href="#/${basePath}"]`);
 		if (activeLink) activeLink.classList.add('active');
 
-		for (const [routePath, handler] of this.routes) {
-			if (fullPath === routePath || fullPath.startsWith(routePath + '/')) {
-				handler(fullPath, subPaths);
-				this.currentRoute = fullPath;
-				return;
-			}
+		if (basePath === 'dashboard') {
+			this.startPolling();
+		} else {
+			this.stopPolling();
 		}
 
-		const pageElement = document.getElementById(`${basePath}-page`);
-		if (pageElement) {
-			pageElement.classList.remove('hidden');
-			this.currentRoute = fullPath;
+		const moduleName = this.getModuleForRoute(basePath);
+		if (moduleName) {
+			await this.loadModule(moduleName);
+		}
+
+		try {
+			for (const [routePath, handler] of this.routes) {
+				if (fullPath === routePath || fullPath.startsWith(routePath + '/')) {
+					await handler(fullPath, subPaths);
+					this.currentRoute = fullPath;
+					return;
+				}
+			}
+
+			const pageElement = document.getElementById(`${basePath}-page`);
+			if (pageElement) {
+				pageElement.classList.remove('hidden');
+				this.currentRoute = fullPath;
+			}
+		} catch (err) {
+			console.error('Route handler error:', err);
+			this.showToast('Failed to load page', 'error');
 		}
 	}
 
@@ -118,25 +143,39 @@ export class OpenWrtCore {
 		return this.features[feature] === '1';
 	}
 
-	async loadModules() {
-		const moduleMap = {
+	getModuleMap() {
+		return {
 			dashboard: './modules/dashboard.js',
 			network: './modules/network.js',
 			system: './modules/system.js',
 			vpn: './modules/vpn.js',
 			services: './modules/services.js'
 		};
+	}
 
-		for (const [name, path] of Object.entries(moduleMap)) {
-			if (this.shouldLoadModule(name)) {
-				try {
-					const module = await import(path);
-					this.modules.set(name, new module.default(this));
-				} catch (err) {
-					console.error(`Failed to load module ${name}:`, err);
-				}
-			}
+	async loadModule(name) {
+		if (this.modules.has(name)) return this.modules.get(name);
+
+		if (!this.shouldLoadModule(name)) return null;
+
+		const moduleMap = this.getModuleMap();
+		const path = moduleMap[name];
+
+		if (!path) return null;
+
+		try {
+			const module = await import(path);
+			const instance = new module.default(this);
+			this.modules.set(name, instance);
+			return instance;
+		} catch (err) {
+			console.error(`Failed to load module ${name}:`, err);
+			return null;
 		}
+	}
+
+	async loadModules() {
+		await this.loadModule('dashboard');
 	}
 
 	shouldLoadModule(moduleName) {
@@ -354,7 +393,9 @@ export class OpenWrtCore {
 		document.getElementById(modalId)?.classList.add('hidden');
 	}
 
-	setupModal(modalId, openBtnId, closeBtnId, cancelBtnId, saveBtnId, saveHandler) {
+	setupModal(options) {
+		const { modalId, openBtnId, closeBtnId, cancelBtnId, saveBtnId, saveHandler } = options;
+
 		if (openBtnId) {
 			document.getElementById(openBtnId)?.addEventListener('click', () => this.openModal(modalId));
 		}
@@ -441,5 +482,61 @@ export class OpenWrtCore {
 		const div = document.createElement('div');
 		div.textContent = text;
 		return div.innerHTML;
+	}
+
+	setupSubTabs(pageId, loadHandlers) {
+		const listeners = [];
+
+		const showSubTab = (tab) => {
+			document.querySelectorAll(`#${pageId} .tab-content`).forEach(content => {
+				content.classList.add('hidden');
+			});
+			document.querySelectorAll(`#${pageId} .tab-btn`).forEach(btn => {
+				btn.classList.remove('active');
+			});
+
+			const tabContent = document.getElementById(`tab-${tab}`);
+			if (tabContent) tabContent.classList.remove('hidden');
+
+			const tabBtn = document.querySelector(`#${pageId} .tab-btn[data-tab="${tab}"]`);
+			if (tabBtn) tabBtn.classList.add('active');
+
+			if (loadHandlers[tab]) {
+				loadHandlers[tab]();
+			}
+		};
+
+		const attachListeners = () => {
+			document.querySelectorAll(`#${pageId} .tab-btn`).forEach(btn => {
+				const handler = (e) => {
+					const tab = e.target.getAttribute('data-tab');
+					const basePath = pageId.replace('-page', '');
+					this.navigate(`/${basePath}/${tab}`);
+				};
+				btn.addEventListener('click', handler);
+				listeners.push({ element: btn, handler });
+			});
+		};
+
+		const cleanup = () => {
+			listeners.forEach(({ element, handler }) => {
+				element.removeEventListener('click', handler);
+			});
+			listeners.length = 0;
+		};
+
+		return { showSubTab, attachListeners, cleanup };
+	}
+
+	showSkeleton(elementId) {
+		const element = document.getElementById(elementId);
+		if (!element) return;
+		element.classList.add('loading-skeleton');
+	}
+
+	hideSkeleton(elementId) {
+		const element = document.getElementById(elementId);
+		if (!element) return;
+		element.classList.remove('loading-skeleton');
 	}
 }

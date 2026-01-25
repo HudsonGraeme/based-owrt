@@ -1108,4 +1108,41 @@ select.form-input {
 	height: 4px;
 	border-radius: 2px;
 }
+
+.loading-skeleton {
+	position: relative;
+	overflow: hidden;
+	pointer-events: none;
+}
+
+.loading-skeleton::before {
+	content: '';
+	position: absolute;
+	top: 0;
+	left: -100%;
+	width: 100%;
+	height: 100%;
+	background: linear-gradient(
+		90deg,
+		transparent 0%,
+		rgba(255, 255, 255, 0.05) 50%,
+		transparent 100%
+	);
+	animation: skeleton-shimmer 1.5s infinite;
+	z-index: 1;
+}
+
+@keyframes skeleton-shimmer {
+	0% {
+		left: -100%;
+	}
+	100% {
+		left: 100%;
+	}
+}
+
+.loading-skeleton tbody tr {
+	opacity: 0.3;
+}
+
 /* cache bust */

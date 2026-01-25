@@ -1,35 +1,32 @@
 export default class NetworkModule {
 	constructor(core) {
 		this.core = core;
+		this.subTabs = null;
+		this.actionListener = null;
 
 		this.core.registerRoute('/network', (path, subPaths) => {
 			const pageElement = document.getElementById('network-page');
 			if (pageElement) pageElement.classList.remove('hidden');
 
-			const tab = subPaths[0] || 'interfaces';
-			this.showSubTab(tab);
-			this.attachSubTabListeners();
-			this.attachActionListeners();
-		});
-	}
+			if (!this.subTabs) {
+				this.subTabs = this.core.setupSubTabs('network-page', {
+					interfaces: () => this.loadInterfaces()
+				});
+				this.subTabs.attachListeners();
+			}
 
-	attachSubTabListeners() {
-		document.querySelectorAll('#network-page .tab-btn').forEach(btn => {
-			if (btn.hasAttribute('data-network-listener')) return;
-			btn.setAttribute('data-network-listener', 'true');
-			btn.addEventListener('click', (e) => {
-				const tab = e.target.getAttribute('data-tab');
-				this.core.navigate(`/network/${tab}`);
-			});
+			this.attachActionListeners();
+
+			const tab = subPaths[0] || 'interfaces';
+			this.subTabs.showSubTab(tab);
 		});
 	}
 
 	attachActionListeners() {
 		const interfacesTable = document.getElementById('interfaces-table');
-		if (!interfacesTable || interfacesTable.hasAttribute('data-actions-listener')) return;
+		if (!interfacesTable || this.actionListener) return;
 
-		interfacesTable.setAttribute('data-actions-listener', 'true');
-		interfacesTable.addEventListener('click', (e) => {
+		this.actionListener = (e) => {
 			const button = e.target.closest('[data-action]');
 			if (!button) return;
 
@@ -41,7 +38,9 @@ export default class NetworkModule {
 			} else if (action === 'delete') {
 				this.deleteInterface(id);
 			}
-		});
+		};
+
+		interfacesTable.addEventListener('click', this.actionListener);
 	}
 
 	editInterface(id) {
@@ -52,33 +51,30 @@ export default class NetworkModule {
 		console.log('Delete interface:', id);
 	}
 
-	showSubTab(tab) {
-		document.querySelectorAll('#network-page .tab-content').forEach(content => {
-			content.classList.add('hidden');
-		});
-		document.querySelectorAll('#network-page .tab-btn').forEach(btn => {
-			btn.classList.remove('active');
-		});
+	cleanup() {
+		if (this.subTabs) {
+			this.subTabs.cleanup();
+			this.subTabs = null;
+		}
 
-		const tabContent = document.getElementById(`tab-${tab}`);
-		if (tabContent) tabContent.classList.remove('hidden');
-
-		const tabBtn = document.querySelector(`#network-page .tab-btn[data-tab="${tab}"]`);
-		if (tabBtn) tabBtn.classList.add('active');
-
-		switch(tab) {
-			case 'interfaces':
-				this.loadInterfaces();
-				break;
+		if (this.actionListener) {
+			const interfacesTable = document.getElementById('interfaces-table');
+			if (interfacesTable) {
+				interfacesTable.removeEventListener('click', this.actionListener);
+			}
+			this.actionListener = null;
 		}
 	}
 
 	async loadInterfaces() {
 		if (!this.core.isFeatureEnabled('network')) return;
 
+		const tbody = document.querySelector('#interfaces-table tbody');
+
+		this.core.showSkeleton('interfaces-table');
+
 		try {
 			const [status, result] = await this.core.ubusCall('network.interface', 'dump', {});
-			const tbody = document.querySelector('#interfaces-table tbody');
 
 			if (status !== 0 || !result || !result.interface) {
 				this.core.renderEmptyTable(tbody, 6, 'No interfaces found');
@@ -109,6 +105,8 @@ export default class NetworkModule {
 		} catch (err) {
 			console.error('Failed to load interfaces:', err);
 			this.core.showToast('Failed to load network interfaces', 'error');
+		} finally {
+			this.core.hideSkeleton('interfaces-table');
 		}
 	}
 }

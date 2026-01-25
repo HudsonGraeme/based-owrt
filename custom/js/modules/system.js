@@ -1,49 +1,29 @@
 export default class SystemModule {
 	constructor(core) {
 		this.core = core;
+		this.subTabs = null;
 
 		this.core.registerRoute('/system', (path, subPaths) => {
 			const pageElement = document.getElementById('system-page');
 			if (pageElement) pageElement.classList.remove('hidden');
 
+			if (!this.subTabs) {
+				this.subTabs = this.core.setupSubTabs('system-page', {
+					general: () => this.loadSystemInfo(),
+					software: () => this.loadPackages()
+				});
+				this.subTabs.attachListeners();
+			}
+
 			const tab = subPaths[0] || 'general';
-			this.showSubTab(tab);
-			this.attachSubTabListeners();
+			this.subTabs.showSubTab(tab);
 		});
 	}
 
-	attachSubTabListeners() {
-		document.querySelectorAll('#system-page .tab-btn').forEach(btn => {
-			if (btn.hasAttribute('data-system-listener')) return;
-			btn.setAttribute('data-system-listener', 'true');
-			btn.addEventListener('click', (e) => {
-				const tab = e.target.getAttribute('data-tab');
-				this.core.navigate(`/system/${tab}`);
-			});
-		});
-	}
-
-	showSubTab(tab) {
-		document.querySelectorAll('#system-page .tab-content').forEach(content => {
-			content.classList.add('hidden');
-		});
-		document.querySelectorAll('#system-page .tab-btn').forEach(btn => {
-			btn.classList.remove('active');
-		});
-
-		const tabContent = document.getElementById(`tab-${tab}`);
-		if (tabContent) tabContent.classList.remove('hidden');
-
-		const tabBtn = document.querySelector(`#system-page .tab-btn[data-tab="${tab}"]`);
-		if (tabBtn) tabBtn.classList.add('active');
-
-		switch(tab) {
-			case 'general':
-				this.loadSystemInfo();
-				break;
-			case 'software':
-				this.loadPackages();
-				break;
+	cleanup() {
+		if (this.subTabs) {
+			this.subTabs.cleanup();
+			this.subTabs = null;
 		}
 	}
 
@@ -79,12 +59,14 @@ export default class SystemModule {
 	async loadPackages() {
 		if (!this.core.isFeatureEnabled('packages')) return;
 
+		const tbody = document.querySelector('#packages-table tbody');
+
+		this.core.showSkeleton('packages-table');
+
 		try {
 			const [status, result] = await this.core.ubusCall('file', 'read', {
 				path: '/usr/lib/opkg/status'
 			});
-
-			const tbody = document.querySelector('#packages-table tbody');
 
 			if (status !== 0 || !result?.data) {
 				this.core.renderEmptyTable(tbody, 3, 'No packages found');
@@ -92,6 +74,7 @@ export default class SystemModule {
 			}
 
 			const packages = this.parseOpkgStatus(result.data);
+			const totalPackages = packages.length;
 			const rows = packages.slice(0, 100).map(pkg => `
 				<tr>
 					<td>${this.core.escapeHtml(pkg.name)}</td>
@@ -101,8 +84,15 @@ export default class SystemModule {
 			`).join('');
 
 			tbody.innerHTML = rows;
+
+			if (totalPackages > 100) {
+				const messageRow = `<tr><td colspan="3" style="text-align: center; color: var(--steel-muted);">Showing 100 of ${totalPackages} packages</td></tr>`;
+				tbody.insertAdjacentHTML('beforeend', messageRow);
+			}
 		} catch (err) {
 			console.error('Failed to load packages:', err);
+		} finally {
+			this.core.hideSkeleton('packages-table');
 		}
 	}
 
