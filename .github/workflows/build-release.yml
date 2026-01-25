@@ -40,6 +40,17 @@ jobs:
       - name: Checkout
         uses: actions/checkout@v4
 
+      - name: Setup Node.js
+        uses: actions/setup-node@v4
+        with:
+          node-version: '20'
+
+      - name: Install Node dependencies
+        run: npm install
+
+      - name: Build minified assets
+        run: npm run build
+
       - name: Install dependencies
         run: |
           sudo apt-get update
@@ -59,8 +70,9 @@ jobs:
         run: |
           mkdir -p ${{ matrix.sdk_name }}/package/based-ui
           cp Makefile ${{ matrix.sdk_name }}/package/based-ui/
-          cp -r custom ${{ matrix.sdk_name }}/package/based-ui/
+          cp -r dist ${{ matrix.sdk_name }}/package/based-ui/
           cp rpcd-acl.json ${{ matrix.sdk_name }}/package/based-ui/
+          cp -r files ${{ matrix.sdk_name }}/package/based-ui/
 
       - name: Update feeds
         working-directory: ${{ matrix.sdk_name }}

@@ -356,30 +356,30 @@ export class OpenWrtCore {
 		return data.result;
 	}
 
-	async uciGet(config, section = null) {
+	uciGet(config, section = null) {
 		const params = { config };
 		if (section) params.section = section;
-		return await this.ubusCall('uci', 'get', params);
+		return this.ubusCall('uci', 'get', params);
 	}
 
-	async uciSet(config, section, values) {
-		return await this.ubusCall('uci', 'set', { config, section, values });
+	uciSet(config, section, values) {
+		return this.ubusCall('uci', 'set', { config, section, values });
 	}
 
-	async uciAdd(config, type, name, values) {
-		return await this.ubusCall('uci', 'add', { config, type, name, values });
+	uciAdd(config, type, name, values) {
+		return this.ubusCall('uci', 'add', { config, type, name, values });
 	}
 
-	async uciDelete(config, section) {
-		return await this.ubusCall('uci', 'delete', { config, section });
+	uciDelete(config, section) {
+		return this.ubusCall('uci', 'delete', { config, section });
 	}
 
-	async uciCommit(config) {
-		return await this.ubusCall('uci', 'commit', { config });
+	uciCommit(config) {
+		return this.ubusCall('uci', 'commit', { config });
 	}
 
-	async serviceReload(service) {
-		return await this.ubusCall('file', 'exec', {
+	serviceReload(service) {
+		return this.ubusCall('file', 'exec', {
 			command: `/etc/init.d/${service}`,
 			params: ['reload']
 		});
@@ -472,7 +472,7 @@ export class OpenWrtCore {
 	}
 
 	formatRate(kbps) {
-		const mbps = (kbps * 8) / 1024;
+		const mbps = kbps / 1000;
 		if (mbps < 0.01) return '0 Mbps';
 		if (mbps < 1) return `${mbps.toFixed(2)} Mbps`;
 		return `${mbps.toFixed(1)} Mbps`;

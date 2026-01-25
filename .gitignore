@@ -8,3 +8,4 @@ vm/
 .claude/
 pnpm-lock.yaml
 build/
+dist/

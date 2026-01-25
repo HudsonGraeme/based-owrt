@@ -18,10 +18,13 @@
 	"scripts": {
 		"dev": "node scripts/watch.js qemu",
 		"dev:physical": "node scripts/watch.js",
-		"deploy": "scp -r custom/* root@192.168.1.1:/www/custom/"
+		"deploy": "scp -r custom/* root@192.168.1.1:/www/custom/",
+		"build": "node scripts/build.js"
 	},
 	"devDependencies": {
-		"chokidar": "^5.0.0"
+		"chokidar": "^5.0.0",
+		"terser": "^5.36.0",
+		"clean-css": "^5.3.3"
 	},
 	"repository": {
 		"type": "git",
