@@ -7,9 +7,13 @@ export default class DashboardModule {
 		this.lastCpuStats = null;
 		this.bandwidthCanvas = null;
 		this.bandwidthCtx = null;
+
+		this.core.registerRoute('/dashboard', () => this.load());
 	}
 
 	async load() {
+		const pageElement = document.getElementById('dashboard-page');
+		if (pageElement) pageElement.classList.remove('hidden');
 		try {
 			const [status, systemInfo] = await this.core.ubusCall('system', 'info', {});
 			const [boardStatus, boardInfo] = await this.core.ubusCall('system', 'board', {});

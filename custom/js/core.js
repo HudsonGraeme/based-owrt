@@ -3,6 +3,53 @@ export class OpenWrtCore {
 		this.sessionId = localStorage.getItem('ubus_session');
 		this.features = {};
 		this.modules = new Map();
+		this.routes = new Map();
+		this.currentRoute = null;
+	}
+
+	registerRoute(path, handler) {
+		this.routes.set(path, handler);
+	}
+
+	navigate(path) {
+		window.location.hash = path;
+	}
+
+	handleRouteChange() {
+		if (!this.sessionId) return;
+
+		const hash = window.location.hash.slice(1) || '/dashboard';
+		const [basePath, ...subPaths] = hash.split('/').filter(Boolean);
+		const fullPath = `/${basePath}${subPaths.length ? '/' + subPaths.join('/') : ''}`;
+
+		document.querySelectorAll('.page').forEach(page => page.classList.add('hidden'));
+		document.querySelectorAll('.nav a').forEach(link => link.classList.remove('active'));
+
+		const activeLink = document.querySelector(`.nav a[href="#/${basePath}"]`);
+		if (activeLink) activeLink.classList.add('active');
+
+		for (const [routePath, handler] of this.routes) {
+			if (fullPath === routePath || fullPath.startsWith(routePath + '/')) {
+				handler(fullPath, subPaths);
+				this.currentRoute = fullPath;
+				return;
+			}
+		}
+
+		const pageElement = document.getElementById(`${basePath}-page`);
+		if (pageElement) {
+			pageElement.classList.remove('hidden');
+			this.currentRoute = fullPath;
+		}
+	}
+
+	applyFeatureFlags() {
+		document.querySelectorAll('[data-feature]').forEach(element => {
+			const feature = element.getAttribute('data-feature');
+			if (!this.isFeatureEnabled(feature)) {
+				element.style.display = 'none';
+			}
+		});
 	}
 
 	async init() {
@@ -11,6 +58,7 @@ export class OpenWrtCore {
 			if (valid) {
 				await this.loadFeatures();
 				await this.loadModules();
+				this.applyFeatureFlags();
 				this.showMainView();
 				this.startApplication();
 			} else {
@@ -78,11 +126,11 @@ export class OpenWrtCore {
 
 	async loadModules() {
 		const moduleMap = {
-			dashboard: './js/modules/dashboard.js',
-			network: './js/modules/network.js',
-			system: './js/modules/system.js',
-			vpn: './js/modules/vpn.js',
-			services: './js/modules/services.js'
+			dashboard: './modules/dashboard.js',
+			network: './modules/network.js',
+			system: './modules/system.js',
+			vpn: './modules/vpn.js',
+			services: './modules/services.js'
 		};
 
 		for (const [name, path] of Object.entries(moduleMap)) {
@@ -113,44 +161,21 @@ export class OpenWrtCore {
 	startApplication() {
 		this.attachEventListeners();
 
+		window.addEventListener('hashchange', () => this.handleRouteChange());
+
+		if (!window.location.hash) {
+			this.navigate('/dashboard');
+		} else {
+			this.handleRouteChange();
+		}
+
 		if (this.modules.has('dashboard')) {
-			this.modules.get('dashboard').load();
 			this.startPolling();
 		}
 	}
 
 	attachEventListeners() {
 		document.getElementById('logout-btn')?.addEventListener('click', () => this.logout());
-
-		document.querySelectorAll('.nav-item').forEach(item => {
-			item.addEventListener('click', (e) => {
-				const tab = e.currentTarget.getAttribute('data-tab');
-				this.showTab(tab);
-			});
-		});
-	}
-
-	showTab(tab) {
-		document.querySelectorAll('.nav-item').forEach(item => {
-			item.classList.toggle('active', item.getAttribute('data-tab') === tab);
-		});
-
-		document.querySelectorAll('.tab-content').forEach(content => {
-			content.classList.toggle('active', content.id === `${tab}-tab`);
-		});
-
-		const moduleMap = {
-			'network': 'network',
-			'system': 'system',
-			'wireguard': 'vpn',
-			'qos': 'services',
-			'ddns': 'services'
-		};
-
-		const moduleName = moduleMap[tab];
-		if (moduleName && this.modules.has(moduleName)) {
-			this.modules.get(moduleName).handleTabChange(tab);
-		}
 	}
 
 	startPolling() {
@@ -225,6 +250,7 @@ export class OpenWrtCore {
 
 			await this.loadFeatures();
 			await this.loadModules();
+			this.applyFeatureFlags();
 			this.showMainView();
 			this.startApplication();
 		} else {
@@ -248,11 +274,14 @@ export class OpenWrtCore {
 
 		this.stopPolling();
 		localStorage.removeItem('ubus_session');
+		this.clearSavedCredentials();
 		this.sessionId = null;
+		window.location.hash = '';
 		this.showLoginView();
 	}
 
 	showLoginView() {
+		window.location.hash = '';
 		document.getElementById('login-view').classList.remove('hidden');
 		document.getElementById('main-view').classList.add('hidden');
 

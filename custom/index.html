@@ -41,9 +41,9 @@
 					<span>OPENWRT</span>
 				</div>
 				<nav class="nav">
-					<a href="#" data-page="dashboard" class="active">DASHBOARD</a>
-					<a href="#" data-page="network">NETWORK</a>
-					<a href="#" data-page="system">SYSTEM</a>
+					<a href="#/dashboard" class="active">DASHBOARD</a>
+					<a href="#/network">NETWORK</a>
+					<a href="#/system">SYSTEM</a>
 				</nav>
 				<button id="logout-btn" class="logout-btn">LOGOUT</button>
 			</header>
@@ -157,7 +157,7 @@
 						<button class="tab-btn active" data-tab="interfaces">INTERFACES</button>
 						<button class="tab-btn" data-tab="wireless">WIRELESS</button>
 						<button class="tab-btn" data-tab="firewall">FIREWALL</button>
-						<button class="tab-btn" data-tab="dhcp">DHCP</button>
+						<button class="tab-btn" data-tab="dhcp" data-feature="dhcp">DHCP</button>
 						<button class="tab-btn" data-tab="dns">DNS & HOSTS</button>
 						<button class="tab-btn" data-tab="ddns">DDNS</button>
 						<button class="tab-btn" data-tab="qos">QOS</button>
@@ -500,7 +500,7 @@
 						</div>
 					</div>
 
-					<div class="tab-content hidden" id="tab-dhcp">
+					<div class="tab-content hidden" id="tab-dhcp" data-feature="dhcp">
 						<div class="stat-card">
 							<div class="section-title">DHCP LEASES</div>
 							<table class="data-table" id="dhcp-leases-table">

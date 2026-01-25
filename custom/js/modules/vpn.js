@@ -3,12 +3,6 @@ export default class VPNModule {
 		this.core = core;
 	}
 
-	handleTabChange(tab) {
-		if (tab === 'wireguard') {
-			this.loadWireGuard();
-		}
-	}
-
 	async loadWireGuard() {
 		if (!this.core.isFeatureEnabled('wireguard')) return;
 

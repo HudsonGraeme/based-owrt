@@ -1,12 +1,48 @@
 export default class SystemModule {
 	constructor(core) {
 		this.core = core;
+
+		this.core.registerRoute('/system', (path, subPaths) => {
+			const pageElement = document.getElementById('system-page');
+			if (pageElement) pageElement.classList.remove('hidden');
+
+			const tab = subPaths[0] || 'general';
+			this.showSubTab(tab);
+			this.attachSubTabListeners();
+		});
 	}
 
-	handleTabChange(tab) {
+	attachSubTabListeners() {
+		document.querySelectorAll('#system-page .tab-btn').forEach(btn => {
+			if (btn.hasAttribute('data-system-listener')) return;
+			btn.setAttribute('data-system-listener', 'true');
+			btn.addEventListener('click', (e) => {
+				const tab = e.target.getAttribute('data-tab');
+				this.core.navigate(`/system/${tab}`);
+			});
+		});
+	}
+
+	showSubTab(tab) {
+		document.querySelectorAll('#system-page .tab-content').forEach(content => {
+			content.classList.add('hidden');
+		});
+		document.querySelectorAll('#system-page .tab-btn').forEach(btn => {
+			btn.classList.remove('active');
+		});
+
+		const tabContent = document.getElementById(`tab-${tab}`);
+		if (tabContent) tabContent.classList.remove('hidden');
+
+		const tabBtn = document.querySelector(`#system-page .tab-btn[data-tab="${tab}"]`);
+		if (tabBtn) tabBtn.classList.add('active');
+
 		switch(tab) {
-			case 'system':
+			case 'general':
 				this.loadSystemInfo();
+				break;
+			case 'software':
+				this.loadPackages();
 				break;
 		}
 	}
@@ -18,13 +54,13 @@ export default class SystemModule {
 			const [status, boardInfo] = await this.core.ubusCall('system', 'board', {});
 
 			if (status === 0 && boardInfo) {
-				document.getElementById('system-hostname').value = boardInfo.hostname || '';
-				document.getElementById('system-model').textContent = boardInfo.model || 'Unknown';
-				document.getElementById('system-release').textContent = boardInfo.release?.description || 'Unknown';
+				const hostnameInput = document.getElementById('system-hostname');
+				if (hostnameInput) {
+					hostnameInput.value = boardInfo.hostname || '';
+				}
 			}
 		} catch (err) {
 			console.error('Failed to load system info:', err);
-			this.core.showToast('Failed to load system information', 'error');
 		}
 	}
 

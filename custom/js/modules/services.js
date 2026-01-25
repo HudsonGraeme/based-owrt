@@ -3,17 +3,6 @@ export default class ServicesModule {
 		this.core = core;
 	}
 
-	handleTabChange(tab) {
-		switch(tab) {
-			case 'qos':
-				this.loadQoS();
-				break;
-			case 'ddns':
-				this.loadDDNS();
-				break;
-		}
-	}
-
 	async loadQoS() {
 		if (!this.core.isFeatureEnabled('qos')) return;
 

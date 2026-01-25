@@ -1,11 +1,44 @@
 export default class NetworkModule {
 	constructor(core) {
 		this.core = core;
+
+		this.core.registerRoute('/network', (path, subPaths) => {
+			const pageElement = document.getElementById('network-page');
+			if (pageElement) pageElement.classList.remove('hidden');
+
+			const tab = subPaths[0] || 'interfaces';
+			this.showSubTab(tab);
+			this.attachSubTabListeners();
+		});
 	}
 
-	handleTabChange(tab) {
+	attachSubTabListeners() {
+		document.querySelectorAll('#network-page .tab-btn').forEach(btn => {
+			if (btn.hasAttribute('data-network-listener')) return;
+			btn.setAttribute('data-network-listener', 'true');
+			btn.addEventListener('click', (e) => {
+				const tab = e.target.getAttribute('data-tab');
+				this.core.navigate(`/network/${tab}`);
+			});
+		});
+	}
+
+	showSubTab(tab) {
+		document.querySelectorAll('#network-page .tab-content').forEach(content => {
+			content.classList.add('hidden');
+		});
+		document.querySelectorAll('#network-page .tab-btn').forEach(btn => {
+			btn.classList.remove('active');
+		});
+
+		const tabContent = document.getElementById(`tab-${tab}`);
+		if (tabContent) tabContent.classList.remove('hidden');
+
+		const tabBtn = document.querySelector(`#network-page .tab-btn[data-tab="${tab}"]`);
+		if (tabBtn) tabBtn.classList.add('active');
+
 		switch(tab) {
-			case 'network':
+			case 'interfaces':
 				this.loadInterfaces();
 				break;
 		}

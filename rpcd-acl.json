@@ -11,7 +11,10 @@
 			"ubus": {
 				"network.interface": [ "dump" ],
 				"uci": [ "get" ]
-			}
+			},
+			"uci": [
+				"based"
+			]
 		}
 	}
 }
