@@ -368,12 +368,14 @@ export class OpenWrtCore {
 		return this.ubusCall('uci', 'set', { config, section, values });
 	}
 
-	uciAdd(config, type, name, values) {
-		return this.ubusCall('uci', 'add', { config, type, name, values });
+	uciAdd(config, type) {
+		return this.ubusCall('uci', 'add', { config, type });
 	}
 
-	uciDelete(config, section) {
-		return this.ubusCall('uci', 'delete', { config, section });
+	uciDelete(config, section, option = null) {
+		const params = { config, section };
+		if (option) params.option = option;
+		return this.ubusCall('uci', 'delete', params);
 	}
 
 	uciCommit(config) {
