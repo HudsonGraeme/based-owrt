@@ -212,16 +212,28 @@ export class OpenWrtCore {
 		if (this.pollInterval) clearInterval(this.pollInterval);
 
 		this.pollInterval = setInterval(() => {
+			if (document.hidden) return;
 			if (this.modules.has('dashboard')) {
 				this.modules.get('dashboard').update();
 			}
 		}, 3000);
+
+		this._visibilityHandler = () => {
+			if (!document.hidden && this.modules.has('dashboard')) {
+				this.modules.get('dashboard').update();
+			}
+		};
+		document.addEventListener('visibilitychange', this._visibilityHandler);
 	}
 
 	stopPolling() {
 		if (this.pollInterval) {
 			clearInterval(this.pollInterval);
 			this.pollInterval = null;
+		}
+		if (this._visibilityHandler) {
+			document.removeEventListener('visibilitychange', this._visibilityHandler);
+			this._visibilityHandler = null;
 		}
 	}
 
@@ -341,21 +353,37 @@ export class OpenWrtCore {
 		document.getElementById('main-view').classList.remove('hidden');
 	}
 
-	async ubusCall(object, method, params = {}) {
-		const response = await fetch('/ubus', {
-			method: 'POST',
-			headers: { 'Content-Type': 'application/json' },
-			body: JSON.stringify({
-				jsonrpc: '2.0',
-				id: Math.random(),
-				method: 'call',
-				params: [this.sessionId || '00000000000000000000000000000000', object, method, params]
-			})
-		});
-
-		const data = await response.json();
-		if (data.error) throw new Error(data.error.message || 'ubus call failed');
-		return data.result;
+	async ubusCall(object, method, params = {}, { timeout = 10000, retries = 2 } = {}) {
+		let lastError;
+		for (let attempt = 0; attempt <= retries; attempt++) {
+			const controller = new AbortController();
+			const timer = setTimeout(() => controller.abort(), timeout);
+			try {
+				const response = await fetch('/ubus', {
+					method: 'POST',
+					headers: { 'Content-Type': 'application/json' },
+					signal: controller.signal,
+					body: JSON.stringify({
+						jsonrpc: '2.0',
+						id: Math.random(),
+						method: 'call',
+						params: [this.sessionId || '00000000000000000000000000000000', object, method, params]
+					})
+				});
+				clearTimeout(timer);
+				const data = await response.json();
+				if (data.error) throw new Error(data.error.message || `${object}.${method} failed`);
+				return data.result;
+			} catch (err) {
+				clearTimeout(timer);
+				lastError =
+					err.name === 'AbortError' ? new Error(`${object}.${method} timed out after ${timeout}ms`) : err;
+				if (attempt < retries) {
+					await new Promise(r => setTimeout(r, 1000 * 2 ** attempt));
+				}
+			}
+		}
+		throw lastError;
 	}
 
 	uciGet(config, section = null) {
@@ -542,5 +570,50 @@ export class OpenWrtCore {
 		const element = document.getElementById(elementId);
 		if (!element) return;
 		element.classList.remove('loading-skeleton');
+	}
+
+	async loadResource(tableId, colspan, feature, fetcher) {
+		if (feature && !this.isFeatureEnabled(feature)) return;
+		this.showSkeleton(tableId);
+		try {
+			await fetcher();
+		} catch (err) {
+			console.error(`Failed to load ${tableId}:`, err);
+			const tbody = document.querySelector(`#${tableId} tbody`);
+			if (tbody) this.renderEmptyTable(tbody, colspan, 'Failed to load data');
+		} finally {
+			this.hideSkeleton(tableId);
+		}
+	}
+
+	delegateActions(containerId, handlers) {
+		const container = document.getElementById(containerId);
+		if (!container) return null;
+		const handler = e => {
+			const button = e.target.closest('[data-action]');
+			if (!button) return;
+			const action = button.getAttribute('data-action');
+			const id = button.getAttribute('data-id');
+			if (handlers[action]) handlers[action](id);
+		};
+		container.addEventListener('click', handler);
+		return () => container.removeEventListener('click', handler);
+	}
+
+	resetModal(modalId) {
+		const modal = document.getElementById(modalId);
+		if (!modal) return;
+		modal.querySelectorAll('input[type="hidden"]').forEach(el => {
+			el.value = '';
+		});
+		modal.querySelectorAll('input:not([type="hidden"]):not([type="checkbox"]), textarea').forEach(el => {
+			el.value = el.defaultValue || '';
+		});
+		modal.querySelectorAll('select').forEach(el => {
+			el.selectedIndex = 0;
+		});
+		modal.querySelectorAll('input[type="checkbox"]').forEach(el => {
+			el.checked = el.defaultChecked;
+		});
 	}
 }
