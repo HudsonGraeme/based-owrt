@@ -1,1345 +1,1742 @@
-<!DOCTYPE html>
+<!doctype html>
 <html lang="en">
-<head>
-	<meta charset="UTF-8">
-	<meta name="viewport" content="width=device-width, initial-scale=1.0">
-	<title>OpenWrt Control</title>
-	<link rel="icon" type="image/svg+xml" href="data:image/svg+xml,%3Csvg xmlns='http://www.w3.org/2000/svg' viewBox='480 400 250 280'%3E%3Cpath d='M608 668L497.149 604L497.149 476L608 412L718.851 476L718.851 604L608 668Z' fill='%23E2E2E5'/%3E%3C/svg%3E">
-	<link rel="stylesheet" href="app.css">
-</head>
-<body>
-	<div id="app">
-		<div id="login-view" class="view">
-			<div class="login-card">
-				<h1>OPENWRT</h1>
-				<form id="login-form">
-					<input type="text" id="username" placeholder="Username" autocomplete="username">
-					<input type="password" id="password" placeholder="Password" autocomplete="current-password">
-					<label class="remember-label">
-						<input type="checkbox" id="remember-me" class="custom-checkbox">
-						<span class="checkbox-custom"></span>
-						<span>Remember credentials</span>
-					</label>
-					<button type="submit">LOGIN</button>
-					<div id="login-error" class="error"></div>
-				</form>
+	<head>
+		<meta charset="UTF-8" />
+		<meta name="viewport" content="width=device-width, initial-scale=1.0" />
+		<title>OpenWrt Control</title>
+		<link
+			rel="icon"
+			type="image/svg+xml"
+			href="data:image/svg+xml,%3Csvg xmlns='http://www.w3.org/2000/svg' viewBox='480 400 250 280'%3E%3Cpath d='M608 668L497.149 604L497.149 476L608 412L718.851 476L718.851 604L608 668Z' fill='%23E2E2E5'/%3E%3C/svg%3E"
+		/>
+		<link rel="stylesheet" href="app.css" />
+	</head>
+	<body>
+		<div id="app">
+			<div id="login-view" class="view">
+				<div class="login-card">
+					<h1>OPENWRT</h1>
+					<form id="login-form">
+						<input type="text" id="username" placeholder="Username" autocomplete="username" />
+						<input type="password" id="password" placeholder="Password" autocomplete="current-password" />
+						<label class="remember-label">
+							<input type="checkbox" id="remember-me" class="custom-checkbox" />
+							<span class="checkbox-custom"></span>
+							<span>Remember credentials</span>
+						</label>
+						<button type="submit">LOGIN</button>
+						<div id="login-error" class="error"></div>
+					</form>
+				</div>
+			</div>
+
+			<div id="main-view" class="view hidden">
+				<header class="header">
+					<div class="logo">
+						<svg width="24" height="24" viewBox="480 290 660 500" class="logo-icon">
+							<path
+								d="M608 668L497.149 604L497.149 476L608 412L718.851 476L718.851 604L608 668Z"
+								fill="currentColor"
+							/>
+							<path
+								d="M704.237 313.365L874.101 412.45L852.85 448.882L682.986 349.797L704.237 313.365Z"
+								fill="currentColor"
+							/>
+							<path
+								d="M875.093 411.707L878.06 673.57L835.886 674.048L832.918 412.185L875.093 411.707Z"
+								fill="currentColor"
+							/>
+							<path
+								d="M856.809 636.725L696.557 730.203L717.808 766.635L878.06 673.157L856.809 636.725Z"
+								fill="currentColor"
+							/>
+							<path
+								d="M883.714 313.365L1053.58 412.45L1032.33 448.882L862.463 349.797L883.714 313.365Z"
+								fill="currentColor"
+							/>
+							<path
+								d="M1054.57 411.707L1057.54 673.57L1015.36 674.048L1012.4 412.185L1054.57 411.707Z"
+								fill="currentColor"
+							/>
+							<path
+								d="M1036.29 636.725L876.034 730.203L897.285 766.635L1057.54 673.157L1036.29 636.725Z"
+								fill="currentColor"
+							/>
+						</svg>
+						<span>OPENWRT</span>
+					</div>
+					<nav class="nav">
+						<a href="#/dashboard" class="active">DASHBOARD</a>
+						<a href="#/network">NETWORK</a>
+						<a href="#/system">SYSTEM</a>
+					</nav>
+					<button id="logout-btn" class="logout-btn">LOGOUT</button>
+				</header>
+
+				<main class="content">
+					<div id="dashboard-page" class="page">
+						<div class="hero-card" id="wan-status-hero">
+							<div class="hero-status">
+								<div class="hero-indicator">●</div>
+								<div class="hero-text">
+									<div class="hero-label">INTERNET STATUS</div>
+									<div class="hero-value" id="wan-status">CHECKING...</div>
+								</div>
+							</div>
+							<div class="hero-details">
+								<div class="hero-detail">
+									<span class="hero-detail-label">LAN</span>
+									<span class="hero-detail-value" id="lan-ip">---.---.---.---</span>
+								</div>
+								<div class="hero-detail">
+									<span class="hero-detail-label">WAN</span>
+									<span class="hero-detail-value" id="wan-ip">---.---.---.---</span>
+								</div>
+							</div>
+						</div>
+
+						<div class="stats-grid" style="grid-template-columns: repeat(3, 1fr); margin-top: 24px">
+							<div class="stat-card metric-card">
+								<div class="metric-icon">↓</div>
+								<div class="metric-content">
+									<div class="metric-value" id="bandwidth-down">0 Mbps</div>
+									<div class="metric-label">DOWNLOAD</div>
+								</div>
+							</div>
+							<div class="stat-card metric-card">
+								<div class="metric-icon">↑</div>
+								<div class="metric-content">
+									<div class="metric-value" id="bandwidth-up">0 Mbps</div>
+									<div class="metric-label">UPLOAD</div>
+								</div>
+							</div>
+							<div class="stat-card metric-card">
+								<div class="metric-icon">◆</div>
+								<div class="metric-content">
+									<div class="metric-value" id="clients">0</div>
+									<div class="metric-label">DEVICES</div>
+								</div>
+							</div>
+						</div>
+
+						<div class="stat-card" style="margin-top: 24px">
+							<div class="section-title">NETWORK ACTIVITY (60s)</div>
+							<div class="bandwidth-graph-container">
+								<canvas id="bandwidth-graph" width="800" height="200"></canvas>
+							</div>
+							<div class="bandwidth-legend">
+								<div class="legend-item">
+									<span class="legend-color" style="background: rgba(226, 226, 229, 0.9)"></span>
+									<span>Download</span>
+								</div>
+								<div class="legend-item">
+									<span class="legend-color" style="background: rgba(226, 226, 229, 0.5)"></span>
+									<span>Upload</span>
+								</div>
+							</div>
+						</div>
+
+						<div class="stats-grid" style="margin-top: 24px">
+							<div class="stat-card">
+								<div class="stat-label">CPU USAGE</div>
+								<div class="stat-value" id="cpu">0%</div>
+								<div class="progress-bar">
+									<div class="progress-fill" id="cpu-bar" style="width: 0%"></div>
+								</div>
+							</div>
+							<div class="stat-card">
+								<div class="stat-label">MEMORY</div>
+								<div class="stat-value" id="memory">Loading...</div>
+								<div class="progress-bar">
+									<div class="progress-fill" id="memory-bar" style="width: 0%"></div>
+								</div>
+							</div>
+							<div class="stat-card">
+								<div class="stat-label">UPTIME</div>
+								<div class="stat-value" id="uptime">Loading...</div>
+							</div>
+							<div class="stat-card">
+								<div class="stat-label">HOSTNAME</div>
+								<div class="stat-value" id="hostname">Loading...</div>
+							</div>
+						</div>
+
+						<div class="section-title" style="margin-top: 32px">QUICK ACTIONS</div>
+						<div class="quick-actions">
+							<button class="action-btn danger" id="reboot-btn">Reboot</button>
+							<button class="action-btn" id="restart-network-btn">Restart Network</button>
+							<button class="action-btn" id="restart-firewall-btn">Restart Firewall</button>
+						</div>
+
+						<div class="section-title">SYSTEM LOG</div>
+						<div class="stat-card">
+							<div class="log-viewer" id="system-log">
+								<div class="log-line">Loading system logs...</div>
+							</div>
+						</div>
+					</div>
+
+					<div id="network-page" class="page hidden">
+						<h2>NETWORK</h2>
+						<div class="tabs">
+							<button class="tab-btn active" data-tab="interfaces">INTERFACES</button>
+							<button class="tab-btn" data-tab="wireless">WIRELESS</button>
+							<button class="tab-btn" data-tab="firewall">FIREWALL</button>
+							<button class="tab-btn" data-tab="dhcp" data-feature="dhcp">DHCP</button>
+							<button class="tab-btn" data-tab="dns">DNS & HOSTS</button>
+							<button class="tab-btn" data-tab="ddns">DDNS</button>
+							<button class="tab-btn" data-tab="qos">QOS</button>
+							<button class="tab-btn" data-tab="vpn">VPN</button>
+							<button class="tab-btn" data-tab="diagnostics">DIAGNOSTICS</button>
+						</div>
+
+						<div class="tab-content" id="tab-interfaces">
+							<div class="stat-card">
+								<table class="data-table" id="interfaces-table">
+									<thead>
+										<tr>
+											<th>INTERFACE</th>
+											<th>PROTOCOL</th>
+											<th>STATUS</th>
+											<th>IPV4 ADDRESS</th>
+											<th>RX/TX</th>
+											<th>ACTIONS</th>
+										</tr>
+									</thead>
+									<tbody>
+										<tr>
+											<td colspan="6" style="text-align: center; color: var(--steel-muted)">
+												Loading...
+											</td>
+										</tr>
+									</tbody>
+								</table>
+							</div>
+						</div>
+
+						<div class="modal hidden" id="interface-modal">
+							<div class="modal-backdrop"></div>
+							<div class="modal-content">
+								<div class="modal-header">
+									<h3 class="modal-title">CONFIGURE INTERFACE</h3>
+									<button class="modal-close" id="close-interface-modal">&times;</button>
+								</div>
+								<div class="modal-body">
+									<input type="hidden" id="edit-iface-name" />
+
+									<div class="form-group">
+										<label class="form-label">PROTOCOL</label>
+										<select id="edit-iface-proto" class="form-input">
+											<option value="static">Static</option>
+											<option value="dhcp">DHCP</option>
+										</select>
+									</div>
+
+									<div id="static-config">
+										<div class="form-group">
+											<label class="form-label">IPV4 ADDRESS</label>
+											<input
+												type="text"
+												id="edit-iface-ipaddr"
+												class="form-input"
+												placeholder="192.168.1.1"
+											/>
+										</div>
+
+										<div class="form-group">
+											<label class="form-label">NETMASK</label>
+											<input
+												type="text"
+												id="edit-iface-netmask"
+												class="form-input"
+												placeholder="255.255.255.0"
+											/>
+										</div>
+
+										<div class="form-group">
+											<label class="form-label">GATEWAY</label>
+											<input
+												type="text"
+												id="edit-iface-gateway"
+												class="form-input"
+												placeholder="192.168.1.254"
+											/>
+										</div>
+
+										<div class="form-group">
+											<label class="form-label">DNS SERVERS (space-separated)</label>
+											<input
+												type="text"
+												id="edit-iface-dns"
+												class="form-input"
+												placeholder="8.8.8.8 8.8.4.4"
+											/>
+										</div>
+									</div>
+								</div>
+								<div class="modal-footer">
+									<button class="action-btn" id="cancel-interface-btn">CANCEL</button>
+									<button class="action-btn" id="save-interface-btn">SAVE CHANGES</button>
+								</div>
+							</div>
+						</div>
+
+						<div class="modal hidden" id="wireless-modal">
+							<div class="modal-backdrop"></div>
+							<div class="modal-content">
+								<div class="modal-header">
+									<h3 class="modal-title">CONFIGURE WIRELESS</h3>
+									<button class="modal-close" id="close-wireless-modal">&times;</button>
+								</div>
+								<form class="modal-body" onsubmit="return false;">
+									<input type="hidden" id="edit-wifi-radio" />
+									<input type="hidden" id="edit-wifi-section" />
+
+									<div class="form-group">
+										<label class="form-label">ENABLED</label>
+										<select id="edit-wifi-disabled" class="form-input">
+											<option value="0">Yes</option>
+											<option value="1">No (Disabled)</option>
+										</select>
+									</div>
+
+									<div class="form-group">
+										<label class="form-label">SSID (NETWORK NAME)</label>
+										<input
+											type="text"
+											id="edit-wifi-ssid"
+											class="form-input"
+											placeholder="MyNetwork"
+											autocomplete="off"
+										/>
+									</div>
+
+									<div class="form-group">
+										<label class="form-label">ENCRYPTION</label>
+										<select id="edit-wifi-encryption" class="form-input">
+											<option value="none">None (Open)</option>
+											<option value="psk2">WPA2-PSK</option>
+											<option value="psk-mixed">WPA/WPA2-PSK Mixed</option>
+											<option value="sae">WPA3-SAE</option>
+											<option value="sae-mixed">WPA2/WPA3-SAE Mixed</option>
+										</select>
+									</div>
+
+									<div class="form-group" id="wifi-key-group">
+										<label class="form-label">PASSWORD</label>
+										<input
+											type="password"
+											id="edit-wifi-key"
+											class="form-input"
+											placeholder="Enter password (8+ characters)"
+											autocomplete="new-password"
+										/>
+									</div>
+
+									<div class="form-group">
+										<label class="form-label">CHANNEL</label>
+										<select id="edit-wifi-channel" class="form-input">
+											<option value="auto">Auto</option>
+										</select>
+									</div>
+
+									<div class="form-group">
+										<label class="form-label">TRANSMIT POWER</label>
+										<select id="edit-wifi-txpower" class="form-input">
+											<option value="">Default</option>
+											<option value="10">Low (10 dBm)</option>
+											<option value="15">Medium (15 dBm)</option>
+											<option value="20">High (20 dBm)</option>
+											<option value="25">Maximum (25 dBm)</option>
+										</select>
+									</div>
+
+									<div class="form-group">
+										<label class="form-label">HIDDEN SSID</label>
+										<select id="edit-wifi-hidden" class="form-input">
+											<option value="0">No (Broadcast SSID)</option>
+											<option value="1">Yes (Hidden)</option>
+										</select>
+									</div>
+								</form>
+								<div class="modal-footer">
+									<button class="action-btn" id="cancel-wireless-btn">CANCEL</button>
+									<button class="action-btn" id="save-wireless-btn">SAVE CHANGES</button>
+								</div>
+							</div>
+						</div>
+
+						<div class="tab-content hidden" id="tab-wireless">
+							<div class="stat-card">
+								<table class="data-table" id="wireless-table">
+									<thead>
+										<tr>
+											<th>RADIO</th>
+											<th>SSID</th>
+											<th>CHANNEL</th>
+											<th>STATUS</th>
+											<th>ENCRYPTION</th>
+											<th>ACTIONS</th>
+										</tr>
+									</thead>
+									<tbody>
+										<tr>
+											<td colspan="6" style="text-align: center; color: var(--steel-muted)">
+												Loading...
+											</td>
+										</tr>
+									</tbody>
+								</table>
+							</div>
+						</div>
+
+						<div class="tab-content hidden" id="tab-firewall">
+							<div class="stat-card">
+								<div class="section-title">PORT FORWARDING RULES</div>
+								<button class="action-btn" id="add-forward-btn" style="margin-bottom: 16px">
+									ADD RULE
+								</button>
+								<table class="data-table" id="firewall-table">
+									<thead>
+										<tr>
+											<th>NAME</th>
+											<th>PROTOCOL</th>
+											<th>EXTERNAL PORT</th>
+											<th>INTERNAL IP</th>
+											<th>INTERNAL PORT</th>
+											<th>ENABLED</th>
+											<th>ACTIONS</th>
+										</tr>
+									</thead>
+									<tbody>
+										<tr>
+											<td colspan="7" style="text-align: center; color: var(--steel-muted)">
+												Loading...
+											</td>
+										</tr>
+									</tbody>
+								</table>
+							</div>
+
+							<div class="stat-card" style="margin-top: 24px">
+								<div class="section-title">FIREWALL RULES</div>
+								<button class="action-btn" id="add-fw-rule-btn" style="margin-bottom: 16px">
+									ADD RULE
+								</button>
+								<table class="data-table" id="fw-rules-table">
+									<thead>
+										<tr>
+											<th>NAME</th>
+											<th>SOURCE</th>
+											<th>DESTINATION</th>
+											<th>PROTOCOL</th>
+											<th>PORT</th>
+											<th>ACTION</th>
+											<th>ACTIONS</th>
+										</tr>
+									</thead>
+									<tbody>
+										<tr>
+											<td colspan="7" style="text-align: center; color: var(--steel-muted)">
+												Loading...
+											</td>
+										</tr>
+									</tbody>
+								</table>
+							</div>
+						</div>
+
+						<div class="modal hidden" id="forward-modal">
+							<div class="modal-backdrop"></div>
+							<div class="modal-content">
+								<div class="modal-header">
+									<h3 class="modal-title">PORT FORWARDING RULE</h3>
+									<button class="modal-close" id="close-forward-modal">&times;</button>
+								</div>
+								<div class="modal-body">
+									<input type="hidden" id="edit-forward-section" />
+
+									<div class="form-group">
+										<label class="form-label">RULE NAME</label>
+										<input
+											type="text"
+											id="edit-forward-name"
+											class="form-input"
+											placeholder="SSH, HTTP, etc."
+										/>
+									</div>
+
+									<div class="form-group">
+										<label class="form-label">PROTOCOL</label>
+										<select id="edit-forward-proto" class="form-input">
+											<option value="tcp">TCP</option>
+											<option value="udp">UDP</option>
+											<option value="tcpudp">TCP+UDP</option>
+										</select>
+									</div>
+
+									<div class="form-group">
+										<label class="form-label">EXTERNAL PORT</label>
+										<input
+											type="text"
+											id="edit-forward-src-dport"
+											class="form-input"
+											placeholder="80 or 8080:8090"
+										/>
+									</div>
+
+									<div class="form-group">
+										<label class="form-label">INTERNAL IP ADDRESS</label>
+										<input
+											type="text"
+											id="edit-forward-dest-ip"
+											class="form-input"
+											placeholder="192.168.1.100"
+										/>
+									</div>
+
+									<div class="form-group">
+										<label class="form-label">INTERNAL PORT</label>
+										<input
+											type="text"
+											id="edit-forward-dest-port"
+											class="form-input"
+											placeholder="80 (leave empty to use external port)"
+										/>
+									</div>
+
+									<div class="form-group">
+										<label class="form-label">ENABLED</label>
+										<select id="edit-forward-enabled" class="form-input">
+											<option value="1">Yes</option>
+											<option value="0">No (Disabled)</option>
+										</select>
+									</div>
+								</div>
+								<div class="modal-footer">
+									<button class="action-btn" id="cancel-forward-btn">CANCEL</button>
+									<button class="action-btn" id="save-forward-btn">SAVE RULE</button>
+								</div>
+							</div>
+						</div>
+
+						<div class="modal hidden" id="fw-rule-modal">
+							<div class="modal-backdrop"></div>
+							<div class="modal-content">
+								<div class="modal-header">
+									<h3 class="modal-title">FIREWALL RULE</h3>
+									<button class="modal-close" id="close-fw-rule-modal">&times;</button>
+								</div>
+								<div class="modal-body">
+									<input type="hidden" id="edit-fw-rule-section" />
+
+									<div class="form-group">
+										<label class="form-label">RULE NAME</label>
+										<input
+											type="text"
+											id="edit-fw-rule-name"
+											class="form-input"
+											placeholder="Allow SSH from WAN"
+										/>
+									</div>
+
+									<div class="form-group">
+										<label class="form-label">ACTION</label>
+										<select id="edit-fw-rule-target" class="form-input">
+											<option value="ACCEPT">ACCEPT</option>
+											<option value="REJECT">REJECT</option>
+											<option value="DROP">DROP</option>
+										</select>
+									</div>
+
+									<div class="form-group">
+										<label class="form-label">SOURCE ZONE</label>
+										<select id="edit-fw-rule-src" class="form-input">
+											<option value="">Any</option>
+											<option value="wan">WAN</option>
+											<option value="lan">LAN</option>
+										</select>
+									</div>
+
+									<div class="form-group">
+										<label class="form-label">DESTINATION ZONE</label>
+										<select id="edit-fw-rule-dest" class="form-input">
+											<option value="">Any</option>
+											<option value="wan">WAN</option>
+											<option value="lan">LAN</option>
+										</select>
+									</div>
+
+									<div class="form-group">
+										<label class="form-label">PROTOCOL</label>
+										<select id="edit-fw-rule-proto" class="form-input">
+											<option value="">Any</option>
+											<option value="tcp">TCP</option>
+											<option value="udp">UDP</option>
+											<option value="icmp">ICMP</option>
+										</select>
+									</div>
+
+									<div class="form-group">
+										<label class="form-label">DESTINATION PORT</label>
+										<input
+											type="text"
+											id="edit-fw-rule-dest-port"
+											class="form-input"
+											placeholder="22 or 8080:8090 (leave empty for any)"
+										/>
+									</div>
+
+									<div class="form-group">
+										<label class="form-label">SOURCE IP (CIDR)</label>
+										<input
+											type="text"
+											id="edit-fw-rule-src-ip"
+											class="form-input"
+											placeholder="0.0.0.0/0 for any"
+										/>
+									</div>
+								</div>
+								<div class="modal-footer">
+									<button class="action-btn" id="cancel-fw-rule-btn">CANCEL</button>
+									<button class="action-btn" id="save-fw-rule-btn">SAVE RULE</button>
+								</div>
+							</div>
+						</div>
+
+						<div class="tab-content hidden" id="tab-dhcp" data-feature="dhcp">
+							<div class="stat-card">
+								<div class="section-title">DHCP LEASES</div>
+								<table class="data-table" id="dhcp-leases-table">
+									<thead>
+										<tr>
+											<th>HOSTNAME</th>
+											<th>IP ADDRESS</th>
+											<th>MAC ADDRESS</th>
+											<th>EXPIRES</th>
+										</tr>
+									</thead>
+									<tbody>
+										<tr>
+											<td colspan="4" style="text-align: center; color: var(--steel-muted)">
+												Loading...
+											</td>
+										</tr>
+									</tbody>
+								</table>
+							</div>
+
+							<div class="stat-card" style="margin-top: 24px">
+								<div class="section-title">STATIC LEASES</div>
+								<button class="action-btn" id="add-static-lease-btn" style="margin-bottom: 16px">
+									ADD STATIC LEASE
+								</button>
+								<table class="data-table" id="dhcp-static-table">
+									<thead>
+										<tr>
+											<th>HOSTNAME</th>
+											<th>MAC ADDRESS</th>
+											<th>IP ADDRESS</th>
+											<th>ACTIONS</th>
+										</tr>
+									</thead>
+									<tbody>
+										<tr>
+											<td colspan="4" style="text-align: center; color: var(--steel-muted)">
+												Loading...
+											</td>
+										</tr>
+									</tbody>
+								</table>
+							</div>
+						</div>
+
+						<div class="tab-content hidden" id="tab-dns">
+							<div class="stat-card">
+								<div class="section-title">CUSTOM DNS ENTRIES</div>
+								<button class="action-btn" id="add-dns-entry-btn" style="margin-bottom: 16px">
+									ADD DNS ENTRY
+								</button>
+								<table class="data-table" id="dns-entries-table">
+									<thead>
+										<tr>
+											<th>HOSTNAME</th>
+											<th>IP ADDRESS</th>
+											<th>ACTIONS</th>
+										</tr>
+									</thead>
+									<tbody>
+										<tr>
+											<td colspan="3" style="text-align: center; color: var(--steel-muted)">
+												Loading...
+											</td>
+										</tr>
+									</tbody>
+								</table>
+							</div>
+
+							<div class="stat-card" style="margin-top: 24px">
+								<div class="section-title">HOSTS FILE ENTRIES</div>
+								<button class="action-btn" id="add-host-entry-btn" style="margin-bottom: 16px">
+									ADD HOST ENTRY
+								</button>
+								<table class="data-table" id="hosts-table">
+									<thead>
+										<tr>
+											<th>IP ADDRESS</th>
+											<th>HOSTNAMES</th>
+											<th>ACTIONS</th>
+										</tr>
+									</thead>
+									<tbody>
+										<tr>
+											<td colspan="3" style="text-align: center; color: var(--steel-muted)">
+												Loading...
+											</td>
+										</tr>
+									</tbody>
+								</table>
+							</div>
+						</div>
+
+						<div class="tab-content hidden" id="tab-ddns">
+							<div class="stat-card">
+								<div class="section-title">DYNAMIC DNS SERVICES</div>
+								<button class="action-btn" id="add-ddns-btn" style="margin-bottom: 16px">
+									ADD SERVICE
+								</button>
+								<table class="data-table" id="ddns-table">
+									<thead>
+										<tr>
+											<th>SERVICE</th>
+											<th>HOSTNAME</th>
+											<th>PROVIDER</th>
+											<th>STATUS</th>
+											<th>ENABLED</th>
+											<th>ACTIONS</th>
+										</tr>
+									</thead>
+									<tbody>
+										<tr>
+											<td colspan="6" style="text-align: center; color: var(--steel-muted)">
+												Loading...
+											</td>
+										</tr>
+									</tbody>
+								</table>
+							</div>
+						</div>
+
+						<div class="tab-content hidden" id="tab-qos">
+							<div class="stat-card">
+								<div class="section-title">QOS CONFIGURATION</div>
+								<div class="form-group">
+									<label class="form-label">ENABLE QOS</label>
+									<select id="qos-enabled" class="form-input">
+										<option value="0">Disabled</option>
+										<option value="1">Enabled</option>
+									</select>
+								</div>
+								<div class="form-group">
+									<label class="form-label">DOWNLOAD SPEED (Kbit/s)</label>
+									<input type="number" id="qos-download" class="form-input" placeholder="10000" />
+								</div>
+								<div class="form-group">
+									<label class="form-label">UPLOAD SPEED (Kbit/s)</label>
+									<input type="number" id="qos-upload" class="form-input" placeholder="1000" />
+								</div>
+								<button class="action-btn" id="save-qos-config-btn">SAVE CONFIGURATION</button>
+							</div>
+
+							<div class="stat-card" style="margin-top: 24px">
+								<div class="section-title">QOS CLASSIFICATION RULES</div>
+								<button class="action-btn" id="add-qos-rule-btn" style="margin-bottom: 16px">
+									ADD RULE
+								</button>
+								<table class="data-table" id="qos-rules-table">
+									<thead>
+										<tr>
+											<th>NAME</th>
+											<th>PRIORITY</th>
+											<th>PROTOCOL</th>
+											<th>PORT</th>
+											<th>SOURCE IP</th>
+											<th>ACTIONS</th>
+										</tr>
+									</thead>
+									<tbody>
+										<tr>
+											<td colspan="6" style="text-align: center; color: var(--steel-muted)">
+												Loading...
+											</td>
+										</tr>
+									</tbody>
+								</table>
+							</div>
+						</div>
+
+						<div class="modal hidden" id="static-lease-modal">
+							<div class="modal-backdrop"></div>
+							<div class="modal-content">
+								<div class="modal-header">
+									<h3 class="modal-title">STATIC DHCP LEASE</h3>
+									<button class="modal-close" id="close-static-lease-modal">&times;</button>
+								</div>
+								<div class="modal-body">
+									<input type="hidden" id="edit-static-lease-section" />
+
+									<div class="form-group">
+										<label class="form-label">HOSTNAME</label>
+										<input
+											type="text"
+											id="edit-static-lease-name"
+											class="form-input"
+											placeholder="laptop, desktop, etc."
+										/>
+									</div>
+
+									<div class="form-group">
+										<label class="form-label">MAC ADDRESS</label>
+										<input
+											type="text"
+											id="edit-static-lease-mac"
+											class="form-input"
+											placeholder="aa:bb:cc:dd:ee:ff"
+										/>
+									</div>
+
+									<div class="form-group">
+										<label class="form-label">IP ADDRESS</label>
+										<input
+											type="text"
+											id="edit-static-lease-ip"
+											class="form-input"
+											placeholder="192.168.1.100"
+										/>
+									</div>
+								</div>
+								<div class="modal-footer">
+									<button class="action-btn" id="cancel-static-lease-btn">CANCEL</button>
+									<button class="action-btn" id="save-static-lease-btn">SAVE LEASE</button>
+								</div>
+							</div>
+						</div>
+
+						<div class="modal hidden" id="dns-entry-modal">
+							<div class="modal-backdrop"></div>
+							<div class="modal-content">
+								<div class="modal-header">
+									<h3 class="modal-title">DNS ENTRY</h3>
+									<button class="modal-close" id="close-dns-entry-modal">&times;</button>
+								</div>
+								<div class="modal-body">
+									<input type="hidden" id="edit-dns-entry-section" />
+
+									<div class="form-group">
+										<label class="form-label">HOSTNAME</label>
+										<input
+											type="text"
+											id="edit-dns-hostname"
+											class="form-input"
+											placeholder="example.local"
+										/>
+									</div>
+
+									<div class="form-group">
+										<label class="form-label">IP ADDRESS</label>
+										<input
+											type="text"
+											id="edit-dns-ip"
+											class="form-input"
+											placeholder="192.168.1.100"
+										/>
+									</div>
+								</div>
+								<div class="modal-footer">
+									<button class="action-btn" id="cancel-dns-entry-btn">CANCEL</button>
+									<button class="action-btn" id="save-dns-entry-btn">SAVE ENTRY</button>
+								</div>
+							</div>
+						</div>
+
+						<div class="modal hidden" id="host-entry-modal">
+							<div class="modal-backdrop"></div>
+							<div class="modal-content">
+								<div class="modal-header">
+									<h3 class="modal-title">HOST ENTRY</h3>
+									<button class="modal-close" id="close-host-entry-modal">&times;</button>
+								</div>
+								<div class="modal-body">
+									<input type="hidden" id="edit-host-entry-index" />
+
+									<div class="form-group">
+										<label class="form-label">IP ADDRESS</label>
+										<input
+											type="text"
+											id="edit-host-ip"
+											class="form-input"
+											placeholder="192.168.1.100"
+										/>
+									</div>
+
+									<div class="form-group">
+										<label class="form-label">HOSTNAMES (space separated)</label>
+										<input
+											type="text"
+											id="edit-host-names"
+											class="form-input"
+											placeholder="example.local example"
+										/>
+									</div>
+								</div>
+								<div class="modal-footer">
+									<button class="action-btn" id="cancel-host-entry-btn">CANCEL</button>
+									<button class="action-btn" id="save-host-entry-btn">SAVE ENTRY</button>
+								</div>
+							</div>
+						</div>
+
+						<div class="modal hidden" id="ddns-modal">
+							<div class="modal-backdrop"></div>
+							<div class="modal-content">
+								<div class="modal-header">
+									<h3 class="modal-title">DDNS SERVICE</h3>
+									<button class="modal-close" id="close-ddns-modal">&times;</button>
+								</div>
+								<form class="modal-body" onsubmit="return false;">
+									<input type="hidden" id="edit-ddns-section" />
+
+									<div class="form-group">
+										<label class="form-label">SERVICE NAME</label>
+										<input
+											type="text"
+											id="edit-ddns-name"
+											class="form-input"
+											placeholder="my-ddns"
+											autocomplete="off"
+										/>
+									</div>
+
+									<div class="form-group">
+										<label class="form-label">PROVIDER</label>
+										<select id="edit-ddns-service" class="form-input">
+											<option value="cloudflare.com-v4">Cloudflare</option>
+											<option value="dyndns.org">DynDNS</option>
+											<option value="no-ip.com">No-IP</option>
+											<option value="freedns.afraid.org">FreeDNS</option>
+											<option value="duckdns.org">DuckDNS</option>
+											<option value="google.com">Google Domains</option>
+											<option value="namecheap.com">Namecheap</option>
+											<option value="godaddy.com-v1">GoDaddy</option>
+										</select>
+									</div>
+
+									<div class="form-group">
+										<label class="form-label">HOSTNAME</label>
+										<input
+											type="text"
+											id="edit-ddns-hostname"
+											class="form-input"
+											placeholder="myhost.example.com"
+											autocomplete="off"
+										/>
+									</div>
+
+									<div class="form-group">
+										<label class="form-label">USERNAME / EMAIL</label>
+										<input
+											type="text"
+											id="edit-ddns-username"
+											class="form-input"
+											placeholder="user@example.com"
+											autocomplete="off"
+										/>
+									</div>
+
+									<div class="form-group">
+										<label class="form-label">PASSWORD / TOKEN</label>
+										<input
+											type="password"
+											id="edit-ddns-password"
+											class="form-input"
+											placeholder="API token or password"
+											autocomplete="off"
+										/>
+									</div>
+
+									<div class="form-group">
+										<label class="form-label">UPDATE INTERVAL (minutes)</label>
+										<input
+											type="number"
+											id="edit-ddns-check-interval"
+											class="form-input"
+											value="10"
+											min="1"
+										/>
+									</div>
+
+									<div class="form-group">
+										<label class="form-label">ENABLED</label>
+										<select id="edit-ddns-enabled" class="form-input">
+											<option value="1">Yes</option>
+											<option value="0">No</option>
+										</select>
+									</div>
+								</form>
+								<div class="modal-footer">
+									<button class="action-btn" id="cancel-ddns-btn">CANCEL</button>
+									<button class="action-btn" id="save-ddns-btn">SAVE SERVICE</button>
+								</div>
+							</div>
+						</div>
+
+						<div class="modal hidden" id="qos-rule-modal">
+							<div class="modal-backdrop"></div>
+							<div class="modal-content">
+								<div class="modal-header">
+									<h3 class="modal-title">QOS CLASSIFICATION RULE</h3>
+									<button class="modal-close" id="close-qos-rule-modal">&times;</button>
+								</div>
+								<div class="modal-body">
+									<input type="hidden" id="edit-qos-rule-section" />
+
+									<div class="form-group">
+										<label class="form-label">RULE NAME</label>
+										<input
+											type="text"
+											id="edit-qos-rule-name"
+											class="form-input"
+											placeholder="Video Streaming"
+										/>
+									</div>
+
+									<div class="form-group">
+										<label class="form-label">PRIORITY</label>
+										<select id="edit-qos-rule-priority" class="form-input">
+											<option value="Priority">Priority (Highest)</option>
+											<option value="Express">Express (High)</option>
+											<option value="Normal">Normal (Medium)</option>
+											<option value="Bulk">Bulk (Low)</option>
+										</select>
+									</div>
+
+									<div class="form-group">
+										<label class="form-label">PROTOCOL</label>
+										<select id="edit-qos-rule-proto" class="form-input">
+											<option value="">Any</option>
+											<option value="tcp">TCP</option>
+											<option value="udp">UDP</option>
+											<option value="icmp">ICMP</option>
+										</select>
+									</div>
+
+									<div class="form-group">
+										<label class="form-label">PORT(S)</label>
+										<input
+											type="text"
+											id="edit-qos-rule-ports"
+											class="form-input"
+											placeholder="80, 443 or 8000:9000"
+										/>
+									</div>
+
+									<div class="form-group">
+										<label class="form-label">SOURCE IP (CIDR)</label>
+										<input
+											type="text"
+											id="edit-qos-rule-srchost"
+											class="form-input"
+											placeholder="192.168.1.100/32 or leave empty"
+										/>
+									</div>
+								</div>
+								<div class="modal-footer">
+									<button class="action-btn" id="cancel-qos-rule-btn">CANCEL</button>
+									<button class="action-btn" id="save-qos-rule-btn">SAVE RULE</button>
+								</div>
+							</div>
+						</div>
+
+						<div class="modal hidden" id="wg-peer-modal">
+							<div class="modal-backdrop"></div>
+							<div class="modal-content">
+								<div class="modal-header">
+									<h3 class="modal-title">WIREGUARD PEER</h3>
+									<button class="modal-close" id="close-wg-peer-modal">&times;</button>
+								</div>
+								<div class="modal-body">
+									<input type="hidden" id="edit-wg-peer-section" />
+
+									<div class="form-group">
+										<label class="form-label">PEER NAME</label>
+										<input
+											type="text"
+											id="edit-wg-peer-name"
+											class="form-input"
+											placeholder="laptop, phone, etc."
+										/>
+									</div>
+
+									<div class="form-group">
+										<label class="form-label">PEER PUBLIC KEY</label>
+										<input
+											type="text"
+											id="edit-wg-peer-public-key"
+											class="form-input"
+											placeholder="Client's public key"
+										/>
+									</div>
+
+									<div class="form-group">
+										<label class="form-label">ALLOWED IPS (CIDR)</label>
+										<input
+											type="text"
+											id="edit-wg-peer-allowed-ips"
+											class="form-input"
+											placeholder="10.0.0.2/32"
+										/>
+									</div>
+
+									<div class="form-group">
+										<label class="form-label">PERSISTENT KEEPALIVE (seconds)</label>
+										<input
+											type="number"
+											id="edit-wg-peer-keepalive"
+											class="form-input"
+											placeholder="25"
+										/>
+									</div>
+
+									<div class="form-group">
+										<label class="form-label">PRESHARED KEY (Optional)</label>
+										<input
+											type="text"
+											id="edit-wg-peer-preshared-key"
+											class="form-input"
+											placeholder="Leave empty for no PSK"
+										/>
+									</div>
+								</div>
+								<div class="modal-footer">
+									<button class="action-btn" id="cancel-wg-peer-btn">CANCEL</button>
+									<button class="action-btn" id="save-wg-peer-btn">SAVE PEER</button>
+								</div>
+							</div>
+						</div>
+
+						<div class="modal hidden" id="cron-modal">
+							<div class="modal-backdrop"></div>
+							<div class="modal-content">
+								<div class="modal-header">
+									<h3 class="modal-title">SCHEDULED TASK</h3>
+									<button class="modal-close" id="close-cron-modal">&times;</button>
+								</div>
+								<div class="modal-body">
+									<input type="hidden" id="edit-cron-index" />
+
+									<div class="form-group">
+										<label class="form-label">MINUTE (0-59, * for every)</label>
+										<input type="text" id="edit-cron-minute" class="form-input" placeholder="*" />
+									</div>
+
+									<div class="form-group">
+										<label class="form-label">HOUR (0-23, * for every)</label>
+										<input type="text" id="edit-cron-hour" class="form-input" placeholder="*" />
+									</div>
+
+									<div class="form-group">
+										<label class="form-label">DAY OF MONTH (1-31, * for every)</label>
+										<input type="text" id="edit-cron-day" class="form-input" placeholder="*" />
+									</div>
+
+									<div class="form-group">
+										<label class="form-label">MONTH (1-12, * for every)</label>
+										<input type="text" id="edit-cron-month" class="form-input" placeholder="*" />
+									</div>
+
+									<div class="form-group">
+										<label class="form-label">DAY OF WEEK (0-6, 0=Sunday, * for every)</label>
+										<input type="text" id="edit-cron-weekday" class="form-input" placeholder="*" />
+									</div>
+
+									<div class="form-group">
+										<label class="form-label">COMMAND</label>
+										<input
+											type="text"
+											id="edit-cron-command"
+											class="form-input"
+											placeholder="/usr/bin/example.sh"
+										/>
+									</div>
+
+									<div class="form-group">
+										<label style="display: flex; align-items: center; gap: 8px; cursor: pointer">
+											<input type="checkbox" id="edit-cron-enabled" checked />
+											<span>ENABLED</span>
+										</label>
+									</div>
+								</div>
+								<div class="modal-footer">
+									<button class="action-btn" id="cancel-cron-btn">CANCEL</button>
+									<button class="action-btn" id="save-cron-btn">SAVE TASK</button>
+								</div>
+							</div>
+						</div>
+
+						<div class="tab-content hidden" id="tab-vpn">
+							<div class="stat-card">
+								<div class="section-title">WIREGUARD SERVER CONFIGURATION</div>
+								<div class="form-group">
+									<label class="form-label">ENABLE WIREGUARD</label>
+									<select id="wg-enabled" class="form-input">
+										<option value="0">Disabled</option>
+										<option value="1">Enabled</option>
+									</select>
+								</div>
+								<div class="form-group">
+									<label class="form-label">INTERFACE NAME</label>
+									<input
+										type="text"
+										id="wg-interface"
+										class="form-input"
+										placeholder="wg0"
+										readonly
+									/>
+								</div>
+								<div class="form-group">
+									<label class="form-label">SERVER PORT</label>
+									<input type="number" id="wg-port" class="form-input" placeholder="51820" />
+								</div>
+								<div class="form-group">
+									<label class="form-label">SERVER PRIVATE KEY</label>
+									<input
+										type="text"
+										id="wg-private-key"
+										class="form-input"
+										placeholder="Auto-generated"
+									/>
+								</div>
+								<div class="form-group">
+									<label class="form-label">SERVER PUBLIC KEY</label>
+									<input type="text" id="wg-public-key" class="form-input" readonly />
+								</div>
+								<div class="form-group">
+									<label class="form-label">VPN SUBNET (CIDR)</label>
+									<input type="text" id="wg-address" class="form-input" placeholder="10.0.0.1/24" />
+								</div>
+								<button class="action-btn" id="generate-wg-keys-btn" style="margin-right: 8px">
+									GENERATE KEYS
+								</button>
+								<button class="action-btn" id="save-wg-config-btn">SAVE CONFIGURATION</button>
+							</div>
+
+							<div class="stat-card" style="margin-top: 24px">
+								<div class="section-title">WIREGUARD PEERS (CLIENTS)</div>
+								<button class="action-btn" id="add-wg-peer-btn" style="margin-bottom: 16px">
+									ADD PEER
+								</button>
+								<table class="data-table" id="wg-peers-table">
+									<thead>
+										<tr>
+											<th>NAME</th>
+											<th>PUBLIC KEY</th>
+											<th>ALLOWED IPS</th>
+											<th>ENDPOINT</th>
+											<th>STATUS</th>
+											<th>ACTIONS</th>
+										</tr>
+									</thead>
+									<tbody>
+										<tr>
+											<td colspan="6" style="text-align: center; color: var(--steel-muted)">
+												Loading...
+											</td>
+										</tr>
+									</tbody>
+								</table>
+							</div>
+						</div>
+
+						<div class="tab-content hidden" id="tab-diagnostics">
+							<div class="stat-card">
+								<div class="section-title">ACTIVE CONNECTIONS</div>
+								<table class="data-table" id="connections-table">
+									<thead>
+										<tr>
+											<th>IP ADDRESS</th>
+											<th>MAC ADDRESS</th>
+											<th>HOSTNAME</th>
+											<th>STATUS</th>
+										</tr>
+									</thead>
+									<tbody>
+										<tr>
+											<td colspan="4" style="text-align: center; color: var(--steel-muted)">
+												Loading...
+											</td>
+										</tr>
+									</tbody>
+								</table>
+							</div>
+
+							<div class="stat-card" style="margin-top: 24px">
+								<div class="section-title">PING</div>
+								<div class="diagnostic-form">
+									<input
+										type="text"
+										id="ping-host"
+										placeholder="Enter hostname or IP"
+										class="diag-input"
+									/>
+									<button class="action-btn" id="ping-btn">RUN PING</button>
+								</div>
+								<div class="log-viewer" id="ping-output" style="min-height: 200px">
+									<div class="log-line" style="color: var(--steel-muted)">
+										Enter a hostname or IP address and click Run Ping
+									</div>
+								</div>
+							</div>
+
+							<div class="stat-card" style="margin-top: 24px">
+								<div class="section-title">TRACEROUTE</div>
+								<div class="diagnostic-form">
+									<input
+										type="text"
+										id="traceroute-host"
+										placeholder="Enter hostname or IP"
+										class="diag-input"
+									/>
+									<button class="action-btn" id="traceroute-btn">RUN TRACEROUTE</button>
+								</div>
+								<div class="log-viewer" id="traceroute-output" style="min-height: 200px">
+									<div class="log-line" style="color: var(--steel-muted)">
+										Enter a hostname or IP address and click Run Traceroute
+									</div>
+								</div>
+							</div>
+
+							<div class="stat-card" style="margin-top: 24px">
+								<div class="section-title">WAKE-ON-LAN</div>
+								<div class="diagnostic-form">
+									<input
+										type="text"
+										id="wol-mac"
+										placeholder="Enter MAC address (aa:bb:cc:dd:ee:ff)"
+										class="diag-input"
+									/>
+									<button class="action-btn" id="wol-btn">SEND WOL PACKET</button>
+								</div>
+								<div class="log-viewer" id="wol-output" style="min-height: 100px">
+									<div class="log-line" style="color: var(--steel-muted)">
+										Enter a MAC address to wake a device on the network
+									</div>
+								</div>
+							</div>
+						</div>
+					</div>
+
+					<div id="system-page" class="page hidden">
+						<h2>SYSTEM</h2>
+						<div class="tabs">
+							<button class="tab-btn active" data-tab="general">GENERAL</button>
+							<button class="tab-btn" data-tab="admin">ADMINISTRATION</button>
+							<button class="tab-btn" data-tab="backup">BACKUP/RESTORE</button>
+							<button class="tab-btn" data-tab="software">SOFTWARE</button>
+							<button class="tab-btn" data-tab="startup">STARTUP</button>
+							<button class="tab-btn" data-tab="cron">SCHEDULED TASKS</button>
+							<button class="tab-btn" data-tab="ssh-keys">SSH KEYS</button>
+							<button class="tab-btn" data-tab="mounts">STORAGE</button>
+							<button class="tab-btn" data-tab="led">LED</button>
+							<button class="tab-btn" data-tab="upgrade">FIRMWARE</button>
+						</div>
+
+						<div class="tab-content" id="tab-general">
+							<div class="stat-card">
+								<div class="section-title">GENERAL SETTINGS</div>
+								<div class="form-group">
+									<label class="form-label">HOSTNAME</label>
+									<input type="text" id="system-hostname" class="form-input" value="OpenWrt" />
+								</div>
+								<div class="form-group">
+									<label class="form-label">TIMEZONE</label>
+									<input type="text" id="system-timezone" class="form-input" value="UTC" />
+								</div>
+								<div class="quick-actions">
+									<button class="action-btn" id="save-general-btn">SAVE CHANGES</button>
+								</div>
+							</div>
+						</div>
+
+						<div class="tab-content hidden" id="tab-admin">
+							<div class="stat-card">
+								<div class="section-title">CHANGE PASSWORD</div>
+								<form id="password-form" onsubmit="return false;">
+									<input
+										type="text"
+										name="username"
+										value="root"
+										autocomplete="username"
+										style="display: none"
+									/>
+									<div class="form-group">
+										<label class="form-label">NEW PASSWORD</label>
+										<input
+											type="password"
+											id="new-password"
+											class="form-input"
+											placeholder="Enter new password"
+											autocomplete="new-password"
+										/>
+									</div>
+									<div class="form-group">
+										<label class="form-label">CONFIRM PASSWORD</label>
+										<input
+											type="password"
+											id="confirm-password"
+											class="form-input"
+											placeholder="Confirm password"
+											autocomplete="new-password"
+										/>
+									</div>
+									<div class="quick-actions">
+										<button type="button" class="action-btn" id="change-password-btn">
+											CHANGE PASSWORD
+										</button>
+									</div>
+								</form>
+							</div>
+						</div>
+
+						<div class="tab-content hidden" id="tab-backup">
+							<div class="stat-card">
+								<div class="section-title">BACKUP / RESTORE</div>
+								<div class="quick-actions">
+									<button class="action-btn" id="backup-btn">GENERATE BACKUP</button>
+									<button class="action-btn danger" id="reset-btn">RESET TO DEFAULTS</button>
+								</div>
+							</div>
+						</div>
+
+						<div class="tab-content hidden" id="tab-software">
+							<div class="stat-card">
+								<div class="section-title">INSTALLED PACKAGES</div>
+								<table class="data-table" id="packages-table">
+									<thead>
+										<tr>
+											<th>PACKAGE</th>
+											<th>VERSION</th>
+											<th>ACTIONS</th>
+										</tr>
+									</thead>
+									<tbody>
+										<tr>
+											<td colspan="3" style="text-align: center; color: var(--steel-muted)">
+												Loading...
+											</td>
+										</tr>
+									</tbody>
+								</table>
+							</div>
+						</div>
+
+						<div class="tab-content hidden" id="tab-startup">
+							<div class="stat-card">
+								<div class="section-title">SYSTEM SERVICES</div>
+								<table class="data-table" id="services-table">
+									<thead>
+										<tr>
+											<th>SERVICE</th>
+											<th>STATUS</th>
+											<th>ENABLED</th>
+											<th>ACTIONS</th>
+										</tr>
+									</thead>
+									<tbody>
+										<tr>
+											<td colspan="4" style="text-align: center; color: var(--steel-muted)">
+												Loading...
+											</td>
+										</tr>
+									</tbody>
+								</table>
+							</div>
+						</div>
+
+						<div class="tab-content hidden" id="tab-cron">
+							<div class="stat-card">
+								<div class="section-title">SCHEDULED TASKS</div>
+								<div class="quick-actions" style="margin-bottom: 16px">
+									<button class="action-btn" id="add-cron-btn">ADD TASK</button>
+								</div>
+								<table class="data-table" id="cron-table">
+									<thead>
+										<tr>
+											<th>SCHEDULE</th>
+											<th>COMMAND</th>
+											<th>ENABLED</th>
+											<th>ACTIONS</th>
+										</tr>
+									</thead>
+									<tbody>
+										<tr>
+											<td colspan="4" style="text-align: center; color: var(--steel-muted)">
+												Loading...
+											</td>
+										</tr>
+									</tbody>
+								</table>
+							</div>
+						</div>
+
+						<div class="tab-content hidden" id="tab-ssh-keys">
+							<div class="stat-card">
+								<div class="section-title">SSH AUTHORIZED KEYS</div>
+								<div class="quick-actions" style="margin-bottom: 16px">
+									<button class="action-btn" id="add-ssh-key-btn">ADD KEY</button>
+								</div>
+								<table class="data-table" id="ssh-keys-table">
+									<thead>
+										<tr>
+											<th>TYPE</th>
+											<th>KEY</th>
+											<th>COMMENT</th>
+											<th>ACTIONS</th>
+										</tr>
+									</thead>
+									<tbody>
+										<tr>
+											<td colspan="4" style="text-align: center; color: var(--steel-muted)">
+												Loading...
+											</td>
+										</tr>
+									</tbody>
+								</table>
+							</div>
+						</div>
+
+						<div class="tab-content hidden" id="tab-mounts">
+							<div class="stat-card">
+								<div class="section-title">STORAGE OVERVIEW</div>
+								<div
+									id="storage-charts"
+									style="
+										display: grid;
+										grid-template-columns: repeat(auto-fit, minmax(250px, 1fr));
+										gap: 16px;
+										margin-bottom: 24px;
+									"
+								></div>
+							</div>
+
+							<div class="stat-card">
+								<div class="section-title">MOUNT POINTS</div>
+								<table class="data-table" id="mounts-table">
+									<thead>
+										<tr>
+											<th>DEVICE</th>
+											<th>MOUNT POINT</th>
+											<th>FILESYSTEM</th>
+											<th>SIZE</th>
+											<th>USED</th>
+											<th>AVAILABLE</th>
+										</tr>
+									</thead>
+									<tbody>
+										<tr>
+											<td colspan="6" style="text-align: center; color: var(--steel-muted)">
+												Loading...
+											</td>
+										</tr>
+									</tbody>
+								</table>
+							</div>
+						</div>
+
+						<div class="tab-content hidden" id="tab-led">
+							<div class="stat-card">
+								<div class="section-title">LED CONFIGURATION</div>
+								<table class="data-table" id="led-table">
+									<thead>
+										<tr>
+											<th>LED</th>
+											<th>TRIGGER</th>
+											<th>ACTIONS</th>
+										</tr>
+									</thead>
+									<tbody>
+										<tr>
+											<td colspan="3" style="text-align: center; color: var(--steel-muted)">
+												Loading...
+											</td>
+										</tr>
+									</tbody>
+								</table>
+							</div>
+						</div>
+
+						<div class="tab-content hidden" id="tab-upgrade">
+							<div class="stat-card">
+								<div class="section-title">FIRMWARE UPGRADE</div>
+								<div
+									style="
+										padding: 16px;
+										background: rgba(255, 159, 10, 0.1);
+										border: 1px solid rgba(255, 159, 10, 0.3);
+										border-radius: 6px;
+										margin-bottom: 24px;
+									"
+								>
+									<div style="color: var(--neon-orange); font-weight: 600; margin-bottom: 8px">
+										⚠ WARNING
+									</div>
+									<div style="color: var(--steel-light); font-size: 13px; line-height: 1.6">
+										Firmware upgrade will replace the entire system. Make sure to backup your
+										configuration before proceeding. Do not power off the device during the upgrade
+										process.
+									</div>
+								</div>
+
+								<div class="form-group">
+									<label class="form-label">SELECT FIRMWARE IMAGE (.bin)</label>
+									<input type="file" id="firmware-file" accept=".bin" style="display: none" />
+									<div
+										id="file-upload-area"
+										style="
+											border: 2px dashed var(--slate-border);
+											border-radius: 6px;
+											padding: 32px;
+											text-align: center;
+											cursor: pointer;
+											transition: all 0.2s;
+										"
+									>
+										<div style="color: var(--neon-cyan); font-size: 48px; margin-bottom: 12px">
+											📁
+										</div>
+										<div
+											style="color: var(--steel-light); font-weight: 500; margin-bottom: 8px"
+											id="file-upload-text"
+										>
+											Click to select firmware file
+										</div>
+										<div style="color: var(--steel-muted); font-size: 12px">
+											or drag and drop .bin file here
+										</div>
+									</div>
+								</div>
+
+								<div
+									id="firmware-info"
+									style="
+										display: none;
+										margin: 24px 0;
+										padding: 16px;
+										background: var(--slate-bg);
+										border-radius: 6px;
+									"
+								>
+									<div class="form-label" style="margin-bottom: 12px">FIRMWARE INFO</div>
+									<div
+										id="firmware-details"
+										style="font-family: monospace; font-size: 12px; color: var(--steel-light)"
+									></div>
+								</div>
+
+								<div class="form-group" style="margin-top: 24px">
+									<label style="display: flex; align-items: center; gap: 8px; cursor: pointer">
+										<input type="checkbox" id="keep-settings" checked />
+										<span class="form-label" style="margin: 0"
+											>Keep settings and retain the current configuration</span
+										>
+									</label>
+								</div>
+
+								<div class="quick-actions" style="margin-top: 24px">
+									<button class="action-btn" id="validate-firmware-btn" disabled>
+										VALIDATE FIRMWARE
+									</button>
+									<button
+										class="action-btn"
+										id="flash-firmware-btn"
+										disabled
+										style="background: var(--neon-red); border-color: var(--neon-red)"
+									>
+										FLASH FIRMWARE
+									</button>
+								</div>
+
+								<div
+									id="upgrade-progress"
+									style="
+										display: none;
+										margin-top: 24px;
+										padding: 16px;
+										background: var(--slate-bg);
+										border-radius: 6px;
+									"
+								>
+									<div class="form-label" style="margin-bottom: 12px">UPGRADE PROGRESS</div>
+									<div
+										id="upgrade-status"
+										style="color: var(--steel-light); font-size: 13px; line-height: 1.8"
+									></div>
+								</div>
+							</div>
+						</div>
+					</div>
+
+					<div class="modal hidden" id="ssh-key-modal">
+						<div class="modal-backdrop"></div>
+						<div class="modal-content" style="max-width: 800px">
+							<div class="modal-header">
+								<h3 class="modal-title">ADD SSH KEYS</h3>
+								<button class="modal-close" id="close-ssh-key-modal">&times;</button>
+							</div>
+							<div class="modal-body">
+								<div class="form-group">
+									<label class="form-label"
+										>PASTE PUBLIC KEYS (one per line, GitHub .keys format supported)</label
+									>
+									<textarea
+										id="ssh-key-paste-area"
+										class="form-input"
+										rows="6"
+										placeholder="ssh-rsa AAAAB3NzaC1yc2E... user@host&#10;ssh-ed25519 AAAAC3NzaC1lZDI1NTE5... another@host"
+									></textarea>
+								</div>
+								<div style="text-align: center; margin: 16px 0">
+									<button class="action-btn" id="parse-keys-btn">PARSE KEYS</button>
+								</div>
+								<div id="parsed-keys-preview" style="display: none">
+									<label class="form-label">KEYS TO ADD</label>
+									<div
+										id="parsed-keys-list"
+										style="
+											max-height: 300px;
+											overflow-y: auto;
+											border: 1px solid var(--slate-border);
+											border-radius: 6px;
+											padding: 12px;
+										"
+									></div>
+								</div>
+							</div>
+							<div class="modal-footer">
+								<button class="action-btn" id="cancel-ssh-key-btn">CANCEL</button>
+								<button class="action-btn" id="save-ssh-keys-btn" style="display: none">
+									ADD SELECTED KEYS
+								</button>
+							</div>
+						</div>
+					</div>
+				</main>
 			</div>
 		</div>
 
-		<div id="main-view" class="view hidden">
-			<header class="header">
-				<div class="logo">
-					<svg width="24" height="24" viewBox="480 290 660 500" class="logo-icon">
-						<path d="M608 668L497.149 604L497.149 476L608 412L718.851 476L718.851 604L608 668Z" fill="currentColor"/>
-						<path d="M704.237 313.365L874.101 412.45L852.85 448.882L682.986 349.797L704.237 313.365Z" fill="currentColor"/>
-						<path d="M875.093 411.707L878.06 673.57L835.886 674.048L832.918 412.185L875.093 411.707Z" fill="currentColor"/>
-						<path d="M856.809 636.725L696.557 730.203L717.808 766.635L878.06 673.157L856.809 636.725Z" fill="currentColor"/>
-						<path d="M883.714 313.365L1053.58 412.45L1032.33 448.882L862.463 349.797L883.714 313.365Z" fill="currentColor"/>
-						<path d="M1054.57 411.707L1057.54 673.57L1015.36 674.048L1012.4 412.185L1054.57 411.707Z" fill="currentColor"/>
-						<path d="M1036.29 636.725L876.034 730.203L897.285 766.635L1057.54 673.157L1036.29 636.725Z" fill="currentColor"/>
-					</svg>
-					<span>OPENWRT</span>
-				</div>
-				<nav class="nav">
-					<a href="#/dashboard" class="active">DASHBOARD</a>
-					<a href="#/network">NETWORK</a>
-					<a href="#/system">SYSTEM</a>
-				</nav>
-				<button id="logout-btn" class="logout-btn">LOGOUT</button>
-			</header>
-
-			<main class="content">
-				<div id="dashboard-page" class="page">
-					<div class="hero-card" id="wan-status-hero">
-						<div class="hero-status">
-							<div class="hero-indicator">●</div>
-							<div class="hero-text">
-								<div class="hero-label">INTERNET STATUS</div>
-								<div class="hero-value" id="wan-status">CHECKING...</div>
-							</div>
-						</div>
-						<div class="hero-details">
-							<div class="hero-detail">
-								<span class="hero-detail-label">LAN</span>
-								<span class="hero-detail-value" id="lan-ip">---.---.---.---</span>
-							</div>
-							<div class="hero-detail">
-								<span class="hero-detail-label">WAN</span>
-								<span class="hero-detail-value" id="wan-ip">---.---.---.---</span>
-							</div>
-						</div>
-					</div>
-
-					<div class="stats-grid" style="grid-template-columns: repeat(3, 1fr); margin-top: 24px;">
-						<div class="stat-card metric-card">
-							<div class="metric-icon">↓</div>
-							<div class="metric-content">
-								<div class="metric-value" id="bandwidth-down">0 Mbps</div>
-								<div class="metric-label">DOWNLOAD</div>
-							</div>
-						</div>
-						<div class="stat-card metric-card">
-							<div class="metric-icon">↑</div>
-							<div class="metric-content">
-								<div class="metric-value" id="bandwidth-up">0 Mbps</div>
-								<div class="metric-label">UPLOAD</div>
-							</div>
-						</div>
-						<div class="stat-card metric-card">
-							<div class="metric-icon">◆</div>
-							<div class="metric-content">
-								<div class="metric-value" id="clients">0</div>
-								<div class="metric-label">DEVICES</div>
-							</div>
-						</div>
-					</div>
-
-					<div class="stat-card" style="margin-top: 24px;">
-						<div class="section-title">NETWORK ACTIVITY (60s)</div>
-						<div class="bandwidth-graph-container">
-							<canvas id="bandwidth-graph" width="800" height="200"></canvas>
-						</div>
-						<div class="bandwidth-legend">
-							<div class="legend-item">
-								<span class="legend-color" style="background: rgba(226, 226, 229, 0.9);"></span>
-								<span>Download</span>
-							</div>
-							<div class="legend-item">
-								<span class="legend-color" style="background: rgba(226, 226, 229, 0.5);"></span>
-								<span>Upload</span>
-							</div>
-						</div>
-					</div>
-
-					<div class="stats-grid" style="margin-top: 24px;">
-						<div class="stat-card">
-							<div class="stat-label">CPU USAGE</div>
-							<div class="stat-value" id="cpu">0%</div>
-							<div class="progress-bar">
-								<div class="progress-fill" id="cpu-bar" style="width: 0%"></div>
-							</div>
-						</div>
-						<div class="stat-card">
-							<div class="stat-label">MEMORY</div>
-							<div class="stat-value" id="memory">Loading...</div>
-							<div class="progress-bar">
-								<div class="progress-fill" id="memory-bar" style="width: 0%"></div>
-							</div>
-						</div>
-						<div class="stat-card">
-							<div class="stat-label">UPTIME</div>
-							<div class="stat-value" id="uptime">Loading...</div>
-						</div>
-						<div class="stat-card">
-							<div class="stat-label">HOSTNAME</div>
-							<div class="stat-value" id="hostname">Loading...</div>
-						</div>
-					</div>
-
-					<div class="section-title" style="margin-top: 32px;">QUICK ACTIONS</div>
-					<div class="quick-actions">
-						<button class="action-btn danger" id="reboot-btn">Reboot</button>
-						<button class="action-btn" id="restart-network-btn">Restart Network</button>
-						<button class="action-btn" id="restart-firewall-btn">Restart Firewall</button>
-					</div>
-
-					<div class="section-title">SYSTEM LOG</div>
-					<div class="stat-card">
-						<div class="log-viewer" id="system-log">
-							<div class="log-line">Loading system logs...</div>
-						</div>
-					</div>
-				</div>
-
-				<div id="network-page" class="page hidden">
-					<h2>NETWORK</h2>
-					<div class="tabs">
-						<button class="tab-btn active" data-tab="interfaces">INTERFACES</button>
-						<button class="tab-btn" data-tab="wireless">WIRELESS</button>
-						<button class="tab-btn" data-tab="firewall">FIREWALL</button>
-						<button class="tab-btn" data-tab="dhcp" data-feature="dhcp">DHCP</button>
-						<button class="tab-btn" data-tab="dns">DNS & HOSTS</button>
-						<button class="tab-btn" data-tab="ddns">DDNS</button>
-						<button class="tab-btn" data-tab="qos">QOS</button>
-						<button class="tab-btn" data-tab="vpn">VPN</button>
-						<button class="tab-btn" data-tab="diagnostics">DIAGNOSTICS</button>
-					</div>
-
-					<div class="tab-content" id="tab-interfaces">
-						<div class="stat-card">
-							<table class="data-table" id="interfaces-table">
-								<thead>
-									<tr>
-										<th>INTERFACE</th>
-										<th>PROTOCOL</th>
-										<th>STATUS</th>
-										<th>IPV4 ADDRESS</th>
-										<th>RX/TX</th>
-										<th>ACTIONS</th>
-									</tr>
-								</thead>
-								<tbody>
-									<tr>
-										<td colspan="6" style="text-align: center; color: var(--steel-muted);">Loading...</td>
-									</tr>
-								</tbody>
-							</table>
-						</div>
-					</div>
-
-					<div class="modal hidden" id="interface-modal">
-						<div class="modal-backdrop"></div>
-						<div class="modal-content">
-							<div class="modal-header">
-								<h3 class="modal-title">CONFIGURE INTERFACE</h3>
-								<button class="modal-close" id="close-interface-modal">&times;</button>
-							</div>
-							<div class="modal-body">
-								<input type="hidden" id="edit-iface-name">
-
-								<div class="form-group">
-									<label class="form-label">PROTOCOL</label>
-									<select id="edit-iface-proto" class="form-input">
-										<option value="static">Static</option>
-										<option value="dhcp">DHCP</option>
-									</select>
-								</div>
-
-								<div id="static-config">
-									<div class="form-group">
-										<label class="form-label">IPV4 ADDRESS</label>
-										<input type="text" id="edit-iface-ipaddr" class="form-input" placeholder="192.168.1.1">
-									</div>
-
-									<div class="form-group">
-										<label class="form-label">NETMASK</label>
-										<input type="text" id="edit-iface-netmask" class="form-input" placeholder="255.255.255.0">
-									</div>
-
-									<div class="form-group">
-										<label class="form-label">GATEWAY</label>
-										<input type="text" id="edit-iface-gateway" class="form-input" placeholder="192.168.1.254">
-									</div>
-
-									<div class="form-group">
-										<label class="form-label">DNS SERVERS (space-separated)</label>
-										<input type="text" id="edit-iface-dns" class="form-input" placeholder="8.8.8.8 8.8.4.4">
-									</div>
-								</div>
-							</div>
-							<div class="modal-footer">
-								<button class="action-btn" id="cancel-interface-btn">CANCEL</button>
-								<button class="action-btn" id="save-interface-btn">SAVE CHANGES</button>
-							</div>
-						</div>
-					</div>
-
-					<div class="modal hidden" id="wireless-modal">
-						<div class="modal-backdrop"></div>
-						<div class="modal-content">
-							<div class="modal-header">
-								<h3 class="modal-title">CONFIGURE WIRELESS</h3>
-								<button class="modal-close" id="close-wireless-modal">&times;</button>
-							</div>
-							<form class="modal-body" onsubmit="return false;">
-								<input type="hidden" id="edit-wifi-radio">
-								<input type="hidden" id="edit-wifi-section">
-
-								<div class="form-group">
-									<label class="form-label">ENABLED</label>
-									<select id="edit-wifi-disabled" class="form-input">
-										<option value="0">Yes</option>
-										<option value="1">No (Disabled)</option>
-									</select>
-								</div>
-
-								<div class="form-group">
-									<label class="form-label">SSID (NETWORK NAME)</label>
-									<input type="text" id="edit-wifi-ssid" class="form-input" placeholder="MyNetwork" autocomplete="off">
-								</div>
-
-								<div class="form-group">
-									<label class="form-label">ENCRYPTION</label>
-									<select id="edit-wifi-encryption" class="form-input">
-										<option value="none">None (Open)</option>
-										<option value="psk2">WPA2-PSK</option>
-										<option value="psk-mixed">WPA/WPA2-PSK Mixed</option>
-										<option value="sae">WPA3-SAE</option>
-										<option value="sae-mixed">WPA2/WPA3-SAE Mixed</option>
-									</select>
-								</div>
-
-								<div class="form-group" id="wifi-key-group">
-									<label class="form-label">PASSWORD</label>
-									<input type="password" id="edit-wifi-key" class="form-input" placeholder="Enter password (8+ characters)" autocomplete="new-password">
-								</div>
-
-								<div class="form-group">
-									<label class="form-label">CHANNEL</label>
-									<select id="edit-wifi-channel" class="form-input">
-										<option value="auto">Auto</option>
-									</select>
-								</div>
-
-								<div class="form-group">
-									<label class="form-label">TRANSMIT POWER</label>
-									<select id="edit-wifi-txpower" class="form-input">
-										<option value="">Default</option>
-										<option value="10">Low (10 dBm)</option>
-										<option value="15">Medium (15 dBm)</option>
-										<option value="20">High (20 dBm)</option>
-										<option value="25">Maximum (25 dBm)</option>
-									</select>
-								</div>
-
-								<div class="form-group">
-									<label class="form-label">HIDDEN SSID</label>
-									<select id="edit-wifi-hidden" class="form-input">
-										<option value="0">No (Broadcast SSID)</option>
-										<option value="1">Yes (Hidden)</option>
-									</select>
-								</div>
-							</form>
-							<div class="modal-footer">
-								<button class="action-btn" id="cancel-wireless-btn">CANCEL</button>
-								<button class="action-btn" id="save-wireless-btn">SAVE CHANGES</button>
-							</div>
-						</div>
-					</div>
-
-					<div class="tab-content hidden" id="tab-wireless">
-						<div class="stat-card">
-							<table class="data-table" id="wireless-table">
-								<thead>
-									<tr>
-										<th>RADIO</th>
-										<th>SSID</th>
-										<th>CHANNEL</th>
-										<th>STATUS</th>
-										<th>ENCRYPTION</th>
-										<th>ACTIONS</th>
-									</tr>
-								</thead>
-								<tbody>
-									<tr>
-										<td colspan="6" style="text-align: center; color: var(--steel-muted);">Loading...</td>
-									</tr>
-								</tbody>
-							</table>
-						</div>
-					</div>
-
-					<div class="tab-content hidden" id="tab-firewall">
-						<div class="stat-card">
-							<div class="section-title">PORT FORWARDING RULES</div>
-							<button class="action-btn" id="add-forward-btn" style="margin-bottom: 16px;">ADD RULE</button>
-							<table class="data-table" id="firewall-table">
-								<thead>
-									<tr>
-										<th>NAME</th>
-										<th>PROTOCOL</th>
-										<th>EXTERNAL PORT</th>
-										<th>INTERNAL IP</th>
-										<th>INTERNAL PORT</th>
-										<th>ENABLED</th>
-										<th>ACTIONS</th>
-									</tr>
-								</thead>
-								<tbody>
-									<tr>
-										<td colspan="7" style="text-align: center; color: var(--steel-muted);">Loading...</td>
-									</tr>
-								</tbody>
-							</table>
-						</div>
-
-						<div class="stat-card" style="margin-top: 24px;">
-							<div class="section-title">FIREWALL RULES</div>
-							<button class="action-btn" id="add-fw-rule-btn" style="margin-bottom: 16px;">ADD RULE</button>
-							<table class="data-table" id="fw-rules-table">
-								<thead>
-									<tr>
-										<th>NAME</th>
-										<th>SOURCE</th>
-										<th>DESTINATION</th>
-										<th>PROTOCOL</th>
-										<th>PORT</th>
-										<th>ACTION</th>
-										<th>ACTIONS</th>
-									</tr>
-								</thead>
-								<tbody>
-									<tr>
-										<td colspan="7" style="text-align: center; color: var(--steel-muted);">Loading...</td>
-									</tr>
-								</tbody>
-							</table>
-						</div>
-					</div>
-
-					<div class="modal hidden" id="forward-modal">
-						<div class="modal-backdrop"></div>
-						<div class="modal-content">
-							<div class="modal-header">
-								<h3 class="modal-title">PORT FORWARDING RULE</h3>
-								<button class="modal-close" id="close-forward-modal">&times;</button>
-							</div>
-							<div class="modal-body">
-								<input type="hidden" id="edit-forward-section">
-
-								<div class="form-group">
-									<label class="form-label">RULE NAME</label>
-									<input type="text" id="edit-forward-name" class="form-input" placeholder="SSH, HTTP, etc.">
-								</div>
-
-								<div class="form-group">
-									<label class="form-label">PROTOCOL</label>
-									<select id="edit-forward-proto" class="form-input">
-										<option value="tcp">TCP</option>
-										<option value="udp">UDP</option>
-										<option value="tcpudp">TCP+UDP</option>
-									</select>
-								</div>
-
-								<div class="form-group">
-									<label class="form-label">EXTERNAL PORT</label>
-									<input type="text" id="edit-forward-src-dport" class="form-input" placeholder="80 or 8080:8090">
-								</div>
-
-								<div class="form-group">
-									<label class="form-label">INTERNAL IP ADDRESS</label>
-									<input type="text" id="edit-forward-dest-ip" class="form-input" placeholder="192.168.1.100">
-								</div>
-
-								<div class="form-group">
-									<label class="form-label">INTERNAL PORT</label>
-									<input type="text" id="edit-forward-dest-port" class="form-input" placeholder="80 (leave empty to use external port)">
-								</div>
-
-								<div class="form-group">
-									<label class="form-label">ENABLED</label>
-									<select id="edit-forward-enabled" class="form-input">
-										<option value="1">Yes</option>
-										<option value="0">No (Disabled)</option>
-									</select>
-								</div>
-							</div>
-							<div class="modal-footer">
-								<button class="action-btn" id="cancel-forward-btn">CANCEL</button>
-								<button class="action-btn" id="save-forward-btn">SAVE RULE</button>
-							</div>
-						</div>
-					</div>
-
-					<div class="modal hidden" id="fw-rule-modal">
-						<div class="modal-backdrop"></div>
-						<div class="modal-content">
-							<div class="modal-header">
-								<h3 class="modal-title">FIREWALL RULE</h3>
-								<button class="modal-close" id="close-fw-rule-modal">&times;</button>
-							</div>
-							<div class="modal-body">
-								<input type="hidden" id="edit-fw-rule-section">
-
-								<div class="form-group">
-									<label class="form-label">RULE NAME</label>
-									<input type="text" id="edit-fw-rule-name" class="form-input" placeholder="Allow SSH from WAN">
-								</div>
-
-								<div class="form-group">
-									<label class="form-label">ACTION</label>
-									<select id="edit-fw-rule-target" class="form-input">
-										<option value="ACCEPT">ACCEPT</option>
-										<option value="REJECT">REJECT</option>
-										<option value="DROP">DROP</option>
-									</select>
-								</div>
-
-								<div class="form-group">
-									<label class="form-label">SOURCE ZONE</label>
-									<select id="edit-fw-rule-src" class="form-input">
-										<option value="">Any</option>
-										<option value="wan">WAN</option>
-										<option value="lan">LAN</option>
-									</select>
-								</div>
-
-								<div class="form-group">
-									<label class="form-label">DESTINATION ZONE</label>
-									<select id="edit-fw-rule-dest" class="form-input">
-										<option value="">Any</option>
-										<option value="wan">WAN</option>
-										<option value="lan">LAN</option>
-									</select>
-								</div>
-
-								<div class="form-group">
-									<label class="form-label">PROTOCOL</label>
-									<select id="edit-fw-rule-proto" class="form-input">
-										<option value="">Any</option>
-										<option value="tcp">TCP</option>
-										<option value="udp">UDP</option>
-										<option value="icmp">ICMP</option>
-									</select>
-								</div>
-
-								<div class="form-group">
-									<label class="form-label">DESTINATION PORT</label>
-									<input type="text" id="edit-fw-rule-dest-port" class="form-input" placeholder="22 or 8080:8090 (leave empty for any)">
-								</div>
-
-								<div class="form-group">
-									<label class="form-label">SOURCE IP (CIDR)</label>
-									<input type="text" id="edit-fw-rule-src-ip" class="form-input" placeholder="0.0.0.0/0 for any">
-								</div>
-							</div>
-							<div class="modal-footer">
-								<button class="action-btn" id="cancel-fw-rule-btn">CANCEL</button>
-								<button class="action-btn" id="save-fw-rule-btn">SAVE RULE</button>
-							</div>
-						</div>
-					</div>
-
-					<div class="tab-content hidden" id="tab-dhcp" data-feature="dhcp">
-						<div class="stat-card">
-							<div class="section-title">DHCP LEASES</div>
-							<table class="data-table" id="dhcp-leases-table">
-								<thead>
-									<tr>
-										<th>HOSTNAME</th>
-										<th>IP ADDRESS</th>
-										<th>MAC ADDRESS</th>
-										<th>EXPIRES</th>
-									</tr>
-								</thead>
-								<tbody>
-									<tr>
-										<td colspan="4" style="text-align: center; color: var(--steel-muted);">Loading...</td>
-									</tr>
-								</tbody>
-							</table>
-						</div>
-
-						<div class="stat-card" style="margin-top: 24px;">
-							<div class="section-title">STATIC LEASES</div>
-							<button class="action-btn" id="add-static-lease-btn" style="margin-bottom: 16px;">ADD STATIC LEASE</button>
-							<table class="data-table" id="dhcp-static-table">
-								<thead>
-									<tr>
-										<th>HOSTNAME</th>
-										<th>MAC ADDRESS</th>
-										<th>IP ADDRESS</th>
-										<th>ACTIONS</th>
-									</tr>
-								</thead>
-								<tbody>
-									<tr>
-										<td colspan="4" style="text-align: center; color: var(--steel-muted);">Loading...</td>
-									</tr>
-								</tbody>
-							</table>
-						</div>
-					</div>
-
-					<div class="tab-content hidden" id="tab-dns">
-						<div class="stat-card">
-							<div class="section-title">CUSTOM DNS ENTRIES</div>
-							<button class="action-btn" id="add-dns-entry-btn" style="margin-bottom: 16px;">ADD DNS ENTRY</button>
-							<table class="data-table" id="dns-entries-table">
-								<thead>
-									<tr>
-										<th>HOSTNAME</th>
-										<th>IP ADDRESS</th>
-										<th>ACTIONS</th>
-									</tr>
-								</thead>
-								<tbody>
-									<tr>
-										<td colspan="3" style="text-align: center; color: var(--steel-muted);">Loading...</td>
-									</tr>
-								</tbody>
-							</table>
-						</div>
-
-						<div class="stat-card" style="margin-top: 24px;">
-							<div class="section-title">HOSTS FILE ENTRIES</div>
-							<button class="action-btn" id="add-host-entry-btn" style="margin-bottom: 16px;">ADD HOST ENTRY</button>
-							<table class="data-table" id="hosts-table">
-								<thead>
-									<tr>
-										<th>IP ADDRESS</th>
-										<th>HOSTNAMES</th>
-										<th>ACTIONS</th>
-									</tr>
-								</thead>
-								<tbody>
-									<tr>
-										<td colspan="3" style="text-align: center; color: var(--steel-muted);">Loading...</td>
-									</tr>
-								</tbody>
-							</table>
-						</div>
-					</div>
-
-					<div class="tab-content hidden" id="tab-ddns">
-						<div class="stat-card">
-							<div class="section-title">DYNAMIC DNS SERVICES</div>
-							<button class="action-btn" id="add-ddns-btn" style="margin-bottom: 16px;">ADD SERVICE</button>
-							<table class="data-table" id="ddns-table">
-								<thead>
-									<tr>
-										<th>SERVICE</th>
-										<th>HOSTNAME</th>
-										<th>PROVIDER</th>
-										<th>STATUS</th>
-										<th>ENABLED</th>
-										<th>ACTIONS</th>
-									</tr>
-								</thead>
-								<tbody>
-									<tr>
-										<td colspan="6" style="text-align: center; color: var(--steel-muted);">Loading...</td>
-									</tr>
-								</tbody>
-							</table>
-						</div>
-					</div>
-
-					<div class="tab-content hidden" id="tab-qos">
-						<div class="stat-card">
-							<div class="section-title">QOS CONFIGURATION</div>
-							<div class="form-group">
-								<label class="form-label">ENABLE QOS</label>
-								<select id="qos-enabled" class="form-input">
-									<option value="0">Disabled</option>
-									<option value="1">Enabled</option>
-								</select>
-							</div>
-							<div class="form-group">
-								<label class="form-label">DOWNLOAD SPEED (Kbit/s)</label>
-								<input type="number" id="qos-download" class="form-input" placeholder="10000">
-							</div>
-							<div class="form-group">
-								<label class="form-label">UPLOAD SPEED (Kbit/s)</label>
-								<input type="number" id="qos-upload" class="form-input" placeholder="1000">
-							</div>
-							<button class="action-btn" id="save-qos-config-btn">SAVE CONFIGURATION</button>
-						</div>
-
-						<div class="stat-card" style="margin-top: 24px;">
-							<div class="section-title">QOS CLASSIFICATION RULES</div>
-							<button class="action-btn" id="add-qos-rule-btn" style="margin-bottom: 16px;">ADD RULE</button>
-							<table class="data-table" id="qos-rules-table">
-								<thead>
-									<tr>
-										<th>NAME</th>
-										<th>PRIORITY</th>
-										<th>PROTOCOL</th>
-										<th>PORT</th>
-										<th>SOURCE IP</th>
-										<th>ACTIONS</th>
-									</tr>
-								</thead>
-								<tbody>
-									<tr>
-										<td colspan="6" style="text-align: center; color: var(--steel-muted);">Loading...</td>
-									</tr>
-								</tbody>
-							</table>
-						</div>
-					</div>
-
-					<div class="modal hidden" id="static-lease-modal">
-						<div class="modal-backdrop"></div>
-						<div class="modal-content">
-							<div class="modal-header">
-								<h3 class="modal-title">STATIC DHCP LEASE</h3>
-								<button class="modal-close" id="close-static-lease-modal">&times;</button>
-							</div>
-							<div class="modal-body">
-								<input type="hidden" id="edit-static-lease-section">
-
-								<div class="form-group">
-									<label class="form-label">HOSTNAME</label>
-									<input type="text" id="edit-static-lease-name" class="form-input" placeholder="laptop, desktop, etc.">
-								</div>
-
-								<div class="form-group">
-									<label class="form-label">MAC ADDRESS</label>
-									<input type="text" id="edit-static-lease-mac" class="form-input" placeholder="aa:bb:cc:dd:ee:ff">
-								</div>
-
-								<div class="form-group">
-									<label class="form-label">IP ADDRESS</label>
-									<input type="text" id="edit-static-lease-ip" class="form-input" placeholder="192.168.1.100">
-								</div>
-							</div>
-							<div class="modal-footer">
-								<button class="action-btn" id="cancel-static-lease-btn">CANCEL</button>
-								<button class="action-btn" id="save-static-lease-btn">SAVE LEASE</button>
-							</div>
-						</div>
-					</div>
-
-					<div class="modal hidden" id="dns-entry-modal">
-						<div class="modal-backdrop"></div>
-						<div class="modal-content">
-							<div class="modal-header">
-								<h3 class="modal-title">DNS ENTRY</h3>
-								<button class="modal-close" id="close-dns-entry-modal">&times;</button>
-							</div>
-							<div class="modal-body">
-								<input type="hidden" id="edit-dns-entry-section">
-
-								<div class="form-group">
-									<label class="form-label">HOSTNAME</label>
-									<input type="text" id="edit-dns-hostname" class="form-input" placeholder="example.local">
-								</div>
-
-								<div class="form-group">
-									<label class="form-label">IP ADDRESS</label>
-									<input type="text" id="edit-dns-ip" class="form-input" placeholder="192.168.1.100">
-								</div>
-							</div>
-							<div class="modal-footer">
-								<button class="action-btn" id="cancel-dns-entry-btn">CANCEL</button>
-								<button class="action-btn" id="save-dns-entry-btn">SAVE ENTRY</button>
-							</div>
-						</div>
-					</div>
-
-					<div class="modal hidden" id="host-entry-modal">
-						<div class="modal-backdrop"></div>
-						<div class="modal-content">
-							<div class="modal-header">
-								<h3 class="modal-title">HOST ENTRY</h3>
-								<button class="modal-close" id="close-host-entry-modal">&times;</button>
-							</div>
-							<div class="modal-body">
-								<input type="hidden" id="edit-host-entry-index">
-
-								<div class="form-group">
-									<label class="form-label">IP ADDRESS</label>
-									<input type="text" id="edit-host-ip" class="form-input" placeholder="192.168.1.100">
-								</div>
-
-								<div class="form-group">
-									<label class="form-label">HOSTNAMES (space separated)</label>
-									<input type="text" id="edit-host-names" class="form-input" placeholder="example.local example">
-								</div>
-							</div>
-							<div class="modal-footer">
-								<button class="action-btn" id="cancel-host-entry-btn">CANCEL</button>
-								<button class="action-btn" id="save-host-entry-btn">SAVE ENTRY</button>
-							</div>
-						</div>
-					</div>
-
-					<div class="modal hidden" id="ddns-modal">
-						<div class="modal-backdrop"></div>
-						<div class="modal-content">
-							<div class="modal-header">
-								<h3 class="modal-title">DDNS SERVICE</h3>
-								<button class="modal-close" id="close-ddns-modal">&times;</button>
-							</div>
-							<form class="modal-body" onsubmit="return false;">
-								<input type="hidden" id="edit-ddns-section">
-
-								<div class="form-group">
-									<label class="form-label">SERVICE NAME</label>
-									<input type="text" id="edit-ddns-name" class="form-input" placeholder="my-ddns" autocomplete="off">
-								</div>
-
-								<div class="form-group">
-									<label class="form-label">PROVIDER</label>
-									<select id="edit-ddns-service" class="form-input">
-										<option value="cloudflare.com-v4">Cloudflare</option>
-										<option value="dyndns.org">DynDNS</option>
-										<option value="no-ip.com">No-IP</option>
-										<option value="freedns.afraid.org">FreeDNS</option>
-										<option value="duckdns.org">DuckDNS</option>
-										<option value="google.com">Google Domains</option>
-										<option value="namecheap.com">Namecheap</option>
-										<option value="godaddy.com-v1">GoDaddy</option>
-									</select>
-								</div>
-
-								<div class="form-group">
-									<label class="form-label">HOSTNAME</label>
-									<input type="text" id="edit-ddns-hostname" class="form-input" placeholder="myhost.example.com" autocomplete="off">
-								</div>
-
-								<div class="form-group">
-									<label class="form-label">USERNAME / EMAIL</label>
-									<input type="text" id="edit-ddns-username" class="form-input" placeholder="user@example.com" autocomplete="off">
-								</div>
-
-								<div class="form-group">
-									<label class="form-label">PASSWORD / TOKEN</label>
-									<input type="password" id="edit-ddns-password" class="form-input" placeholder="API token or password" autocomplete="off">
-								</div>
-
-								<div class="form-group">
-									<label class="form-label">UPDATE INTERVAL (minutes)</label>
-									<input type="number" id="edit-ddns-check-interval" class="form-input" value="10" min="1">
-								</div>
-
-								<div class="form-group">
-									<label class="form-label">ENABLED</label>
-									<select id="edit-ddns-enabled" class="form-input">
-										<option value="1">Yes</option>
-										<option value="0">No</option>
-									</select>
-								</div>
-							</form>
-							<div class="modal-footer">
-								<button class="action-btn" id="cancel-ddns-btn">CANCEL</button>
-								<button class="action-btn" id="save-ddns-btn">SAVE SERVICE</button>
-							</div>
-						</div>
-					</div>
-
-					<div class="modal hidden" id="qos-rule-modal">
-						<div class="modal-backdrop"></div>
-						<div class="modal-content">
-							<div class="modal-header">
-								<h3 class="modal-title">QOS CLASSIFICATION RULE</h3>
-								<button class="modal-close" id="close-qos-rule-modal">&times;</button>
-							</div>
-							<div class="modal-body">
-								<input type="hidden" id="edit-qos-rule-section">
-
-								<div class="form-group">
-									<label class="form-label">RULE NAME</label>
-									<input type="text" id="edit-qos-rule-name" class="form-input" placeholder="Video Streaming">
-								</div>
-
-								<div class="form-group">
-									<label class="form-label">PRIORITY</label>
-									<select id="edit-qos-rule-priority" class="form-input">
-										<option value="Priority">Priority (Highest)</option>
-										<option value="Express">Express (High)</option>
-										<option value="Normal">Normal (Medium)</option>
-										<option value="Bulk">Bulk (Low)</option>
-									</select>
-								</div>
-
-								<div class="form-group">
-									<label class="form-label">PROTOCOL</label>
-									<select id="edit-qos-rule-proto" class="form-input">
-										<option value="">Any</option>
-										<option value="tcp">TCP</option>
-										<option value="udp">UDP</option>
-										<option value="icmp">ICMP</option>
-									</select>
-								</div>
-
-								<div class="form-group">
-									<label class="form-label">PORT(S)</label>
-									<input type="text" id="edit-qos-rule-ports" class="form-input" placeholder="80, 443 or 8000:9000">
-								</div>
-
-								<div class="form-group">
-									<label class="form-label">SOURCE IP (CIDR)</label>
-									<input type="text" id="edit-qos-rule-srchost" class="form-input" placeholder="192.168.1.100/32 or leave empty">
-								</div>
-							</div>
-							<div class="modal-footer">
-								<button class="action-btn" id="cancel-qos-rule-btn">CANCEL</button>
-								<button class="action-btn" id="save-qos-rule-btn">SAVE RULE</button>
-							</div>
-						</div>
-					</div>
-
-					<div class="modal hidden" id="wg-peer-modal">
-						<div class="modal-backdrop"></div>
-						<div class="modal-content">
-							<div class="modal-header">
-								<h3 class="modal-title">WIREGUARD PEER</h3>
-								<button class="modal-close" id="close-wg-peer-modal">&times;</button>
-							</div>
-							<div class="modal-body">
-								<input type="hidden" id="edit-wg-peer-section">
-
-								<div class="form-group">
-									<label class="form-label">PEER NAME</label>
-									<input type="text" id="edit-wg-peer-name" class="form-input" placeholder="laptop, phone, etc.">
-								</div>
-
-								<div class="form-group">
-									<label class="form-label">PEER PUBLIC KEY</label>
-									<input type="text" id="edit-wg-peer-public-key" class="form-input" placeholder="Client's public key">
-								</div>
-
-								<div class="form-group">
-									<label class="form-label">ALLOWED IPS (CIDR)</label>
-									<input type="text" id="edit-wg-peer-allowed-ips" class="form-input" placeholder="10.0.0.2/32">
-								</div>
-
-								<div class="form-group">
-									<label class="form-label">PERSISTENT KEEPALIVE (seconds)</label>
-									<input type="number" id="edit-wg-peer-keepalive" class="form-input" placeholder="25">
-								</div>
-
-								<div class="form-group">
-									<label class="form-label">PRESHARED KEY (Optional)</label>
-									<input type="text" id="edit-wg-peer-preshared-key" class="form-input" placeholder="Leave empty for no PSK">
-								</div>
-							</div>
-							<div class="modal-footer">
-								<button class="action-btn" id="cancel-wg-peer-btn">CANCEL</button>
-								<button class="action-btn" id="save-wg-peer-btn">SAVE PEER</button>
-							</div>
-						</div>
-					</div>
-
-					<div class="modal hidden" id="cron-modal">
-						<div class="modal-backdrop"></div>
-						<div class="modal-content">
-							<div class="modal-header">
-								<h3 class="modal-title">SCHEDULED TASK</h3>
-								<button class="modal-close" id="close-cron-modal">&times;</button>
-							</div>
-							<div class="modal-body">
-								<input type="hidden" id="edit-cron-index">
-
-								<div class="form-group">
-									<label class="form-label">MINUTE (0-59, * for every)</label>
-									<input type="text" id="edit-cron-minute" class="form-input" placeholder="*">
-								</div>
-
-								<div class="form-group">
-									<label class="form-label">HOUR (0-23, * for every)</label>
-									<input type="text" id="edit-cron-hour" class="form-input" placeholder="*">
-								</div>
-
-								<div class="form-group">
-									<label class="form-label">DAY OF MONTH (1-31, * for every)</label>
-									<input type="text" id="edit-cron-day" class="form-input" placeholder="*">
-								</div>
-
-								<div class="form-group">
-									<label class="form-label">MONTH (1-12, * for every)</label>
-									<input type="text" id="edit-cron-month" class="form-input" placeholder="*">
-								</div>
-
-								<div class="form-group">
-									<label class="form-label">DAY OF WEEK (0-6, 0=Sunday, * for every)</label>
-									<input type="text" id="edit-cron-weekday" class="form-input" placeholder="*">
-								</div>
-
-								<div class="form-group">
-									<label class="form-label">COMMAND</label>
-									<input type="text" id="edit-cron-command" class="form-input" placeholder="/usr/bin/example.sh">
-								</div>
-
-								<div class="form-group">
-									<label style="display: flex; align-items: center; gap: 8px; cursor: pointer;">
-										<input type="checkbox" id="edit-cron-enabled" checked>
-										<span>ENABLED</span>
-									</label>
-								</div>
-							</div>
-							<div class="modal-footer">
-								<button class="action-btn" id="cancel-cron-btn">CANCEL</button>
-								<button class="action-btn" id="save-cron-btn">SAVE TASK</button>
-							</div>
-						</div>
-					</div>
-
-					<div class="tab-content hidden" id="tab-vpn">
-						<div class="stat-card">
-							<div class="section-title">WIREGUARD SERVER CONFIGURATION</div>
-							<div class="form-group">
-								<label class="form-label">ENABLE WIREGUARD</label>
-								<select id="wg-enabled" class="form-input">
-									<option value="0">Disabled</option>
-									<option value="1">Enabled</option>
-								</select>
-							</div>
-							<div class="form-group">
-								<label class="form-label">INTERFACE NAME</label>
-								<input type="text" id="wg-interface" class="form-input" placeholder="wg0" readonly>
-							</div>
-							<div class="form-group">
-								<label class="form-label">SERVER PORT</label>
-								<input type="number" id="wg-port" class="form-input" placeholder="51820">
-							</div>
-							<div class="form-group">
-								<label class="form-label">SERVER PRIVATE KEY</label>
-								<input type="text" id="wg-private-key" class="form-input" placeholder="Auto-generated">
-							</div>
-							<div class="form-group">
-								<label class="form-label">SERVER PUBLIC KEY</label>
-								<input type="text" id="wg-public-key" class="form-input" readonly>
-							</div>
-							<div class="form-group">
-								<label class="form-label">VPN SUBNET (CIDR)</label>
-								<input type="text" id="wg-address" class="form-input" placeholder="10.0.0.1/24">
-							</div>
-							<button class="action-btn" id="generate-wg-keys-btn" style="margin-right: 8px;">GENERATE KEYS</button>
-							<button class="action-btn" id="save-wg-config-btn">SAVE CONFIGURATION</button>
-						</div>
-
-						<div class="stat-card" style="margin-top: 24px;">
-							<div class="section-title">WIREGUARD PEERS (CLIENTS)</div>
-							<button class="action-btn" id="add-wg-peer-btn" style="margin-bottom: 16px;">ADD PEER</button>
-							<table class="data-table" id="wg-peers-table">
-								<thead>
-									<tr>
-										<th>NAME</th>
-										<th>PUBLIC KEY</th>
-										<th>ALLOWED IPS</th>
-										<th>ENDPOINT</th>
-										<th>STATUS</th>
-										<th>ACTIONS</th>
-									</tr>
-								</thead>
-								<tbody>
-									<tr>
-										<td colspan="6" style="text-align: center; color: var(--steel-muted);">Loading...</td>
-									</tr>
-								</tbody>
-							</table>
-						</div>
-					</div>
-
-					<div class="tab-content hidden" id="tab-diagnostics">
-						<div class="stat-card">
-							<div class="section-title">ACTIVE CONNECTIONS</div>
-							<table class="data-table" id="connections-table">
-								<thead>
-									<tr>
-										<th>IP ADDRESS</th>
-										<th>MAC ADDRESS</th>
-										<th>HOSTNAME</th>
-										<th>STATUS</th>
-									</tr>
-								</thead>
-								<tbody>
-									<tr>
-										<td colspan="4" style="text-align: center; color: var(--steel-muted);">Loading...</td>
-									</tr>
-								</tbody>
-							</table>
-						</div>
-
-						<div class="stat-card" style="margin-top: 24px;">
-							<div class="section-title">PING</div>
-							<div class="diagnostic-form">
-								<input type="text" id="ping-host" placeholder="Enter hostname or IP" class="diag-input">
-								<button class="action-btn" id="ping-btn">RUN PING</button>
-							</div>
-							<div class="log-viewer" id="ping-output" style="min-height: 200px;">
-								<div class="log-line" style="color: var(--steel-muted);">Enter a hostname or IP address and click Run Ping</div>
-							</div>
-						</div>
-
-						<div class="stat-card" style="margin-top: 24px;">
-							<div class="section-title">TRACEROUTE</div>
-							<div class="diagnostic-form">
-								<input type="text" id="traceroute-host" placeholder="Enter hostname or IP" class="diag-input">
-								<button class="action-btn" id="traceroute-btn">RUN TRACEROUTE</button>
-							</div>
-							<div class="log-viewer" id="traceroute-output" style="min-height: 200px;">
-								<div class="log-line" style="color: var(--steel-muted);">Enter a hostname or IP address and click Run Traceroute</div>
-							</div>
-						</div>
-
-						<div class="stat-card" style="margin-top: 24px;">
-							<div class="section-title">WAKE-ON-LAN</div>
-							<div class="diagnostic-form">
-								<input type="text" id="wol-mac" placeholder="Enter MAC address (aa:bb:cc:dd:ee:ff)" class="diag-input">
-								<button class="action-btn" id="wol-btn">SEND WOL PACKET</button>
-							</div>
-							<div class="log-viewer" id="wol-output" style="min-height: 100px;">
-								<div class="log-line" style="color: var(--steel-muted);">Enter a MAC address to wake a device on the network</div>
-							</div>
-						</div>
-					</div>
-				</div>
-
-				<div id="system-page" class="page hidden">
-					<h2>SYSTEM</h2>
-					<div class="tabs">
-						<button class="tab-btn active" data-tab="general">GENERAL</button>
-						<button class="tab-btn" data-tab="admin">ADMINISTRATION</button>
-						<button class="tab-btn" data-tab="backup">BACKUP/RESTORE</button>
-						<button class="tab-btn" data-tab="software">SOFTWARE</button>
-						<button class="tab-btn" data-tab="startup">STARTUP</button>
-						<button class="tab-btn" data-tab="cron">SCHEDULED TASKS</button>
-						<button class="tab-btn" data-tab="ssh-keys">SSH KEYS</button>
-						<button class="tab-btn" data-tab="mounts">STORAGE</button>
-						<button class="tab-btn" data-tab="led">LED</button>
-						<button class="tab-btn" data-tab="upgrade">FIRMWARE</button>
-					</div>
-
-					<div class="tab-content" id="tab-general">
-						<div class="stat-card">
-							<div class="section-title">GENERAL SETTINGS</div>
-							<div class="form-group">
-								<label class="form-label">HOSTNAME</label>
-								<input type="text" id="system-hostname" class="form-input" value="OpenWrt">
-							</div>
-							<div class="form-group">
-								<label class="form-label">TIMEZONE</label>
-								<input type="text" id="system-timezone" class="form-input" value="UTC">
-							</div>
-							<div class="quick-actions">
-								<button class="action-btn" id="save-general-btn">SAVE CHANGES</button>
-							</div>
-						</div>
-					</div>
-
-					<div class="tab-content hidden" id="tab-admin">
-						<div class="stat-card">
-							<div class="section-title">CHANGE PASSWORD</div>
-							<form id="password-form" onsubmit="return false;">
-								<input type="text" name="username" value="root" autocomplete="username" style="display: none;">
-								<div class="form-group">
-									<label class="form-label">NEW PASSWORD</label>
-									<input type="password" id="new-password" class="form-input" placeholder="Enter new password" autocomplete="new-password">
-								</div>
-								<div class="form-group">
-									<label class="form-label">CONFIRM PASSWORD</label>
-									<input type="password" id="confirm-password" class="form-input" placeholder="Confirm password" autocomplete="new-password">
-								</div>
-								<div class="quick-actions">
-									<button type="button" class="action-btn" id="change-password-btn">CHANGE PASSWORD</button>
-								</div>
-							</form>
-						</div>
-					</div>
-
-					<div class="tab-content hidden" id="tab-backup">
-						<div class="stat-card">
-							<div class="section-title">BACKUP / RESTORE</div>
-							<div class="quick-actions">
-								<button class="action-btn" id="backup-btn">GENERATE BACKUP</button>
-								<button class="action-btn danger" id="reset-btn">RESET TO DEFAULTS</button>
-							</div>
-						</div>
-					</div>
-
-					<div class="tab-content hidden" id="tab-software">
-						<div class="stat-card">
-							<div class="section-title">INSTALLED PACKAGES</div>
-							<table class="data-table" id="packages-table">
-								<thead>
-									<tr>
-										<th>PACKAGE</th>
-										<th>VERSION</th>
-										<th>ACTIONS</th>
-									</tr>
-								</thead>
-								<tbody>
-									<tr>
-										<td colspan="3" style="text-align: center; color: var(--steel-muted);">Loading...</td>
-									</tr>
-								</tbody>
-							</table>
-						</div>
-					</div>
-
-					<div class="tab-content hidden" id="tab-startup">
-						<div class="stat-card">
-							<div class="section-title">SYSTEM SERVICES</div>
-							<table class="data-table" id="services-table">
-								<thead>
-									<tr>
-										<th>SERVICE</th>
-										<th>STATUS</th>
-										<th>ENABLED</th>
-										<th>ACTIONS</th>
-									</tr>
-								</thead>
-								<tbody>
-									<tr>
-										<td colspan="4" style="text-align: center; color: var(--steel-muted);">Loading...</td>
-									</tr>
-								</tbody>
-							</table>
-						</div>
-					</div>
-
-					<div class="tab-content hidden" id="tab-cron">
-						<div class="stat-card">
-							<div class="section-title">SCHEDULED TASKS</div>
-							<div class="quick-actions" style="margin-bottom: 16px;">
-								<button class="action-btn" id="add-cron-btn">ADD TASK</button>
-							</div>
-							<table class="data-table" id="cron-table">
-								<thead>
-									<tr>
-										<th>SCHEDULE</th>
-										<th>COMMAND</th>
-										<th>ENABLED</th>
-										<th>ACTIONS</th>
-									</tr>
-								</thead>
-								<tbody>
-									<tr>
-										<td colspan="4" style="text-align: center; color: var(--steel-muted);">Loading...</td>
-									</tr>
-								</tbody>
-							</table>
-						</div>
-					</div>
-
-					<div class="tab-content hidden" id="tab-ssh-keys">
-						<div class="stat-card">
-							<div class="section-title">SSH AUTHORIZED KEYS</div>
-							<div class="quick-actions" style="margin-bottom: 16px;">
-								<button class="action-btn" id="add-ssh-key-btn">ADD KEY</button>
-							</div>
-							<table class="data-table" id="ssh-keys-table">
-								<thead>
-									<tr>
-										<th>TYPE</th>
-										<th>KEY</th>
-										<th>COMMENT</th>
-										<th>ACTIONS</th>
-									</tr>
-								</thead>
-								<tbody>
-									<tr>
-										<td colspan="4" style="text-align: center; color: var(--steel-muted);">Loading...</td>
-									</tr>
-								</tbody>
-							</table>
-						</div>
-					</div>
-
-					<div class="tab-content hidden" id="tab-mounts">
-						<div class="stat-card">
-							<div class="section-title">STORAGE OVERVIEW</div>
-							<div id="storage-charts" style="display: grid; grid-template-columns: repeat(auto-fit, minmax(250px, 1fr)); gap: 16px; margin-bottom: 24px;">
-							</div>
-						</div>
-
-						<div class="stat-card">
-							<div class="section-title">MOUNT POINTS</div>
-							<table class="data-table" id="mounts-table">
-								<thead>
-									<tr>
-										<th>DEVICE</th>
-										<th>MOUNT POINT</th>
-										<th>FILESYSTEM</th>
-										<th>SIZE</th>
-										<th>USED</th>
-										<th>AVAILABLE</th>
-									</tr>
-								</thead>
-								<tbody>
-									<tr>
-										<td colspan="6" style="text-align: center; color: var(--steel-muted);">Loading...</td>
-									</tr>
-								</tbody>
-							</table>
-						</div>
-					</div>
-
-					<div class="tab-content hidden" id="tab-led">
-						<div class="stat-card">
-							<div class="section-title">LED CONFIGURATION</div>
-							<table class="data-table" id="led-table">
-								<thead>
-									<tr>
-										<th>LED</th>
-										<th>TRIGGER</th>
-										<th>ACTIONS</th>
-									</tr>
-								</thead>
-								<tbody>
-									<tr>
-										<td colspan="3" style="text-align: center; color: var(--steel-muted);">Loading...</td>
-									</tr>
-								</tbody>
-							</table>
-						</div>
-					</div>
-
-					<div class="tab-content hidden" id="tab-upgrade">
-						<div class="stat-card">
-							<div class="section-title">FIRMWARE UPGRADE</div>
-							<div style="padding: 16px; background: rgba(255, 159, 10, 0.1); border: 1px solid rgba(255, 159, 10, 0.3); border-radius: 6px; margin-bottom: 24px;">
-								<div style="color: var(--neon-orange); font-weight: 600; margin-bottom: 8px;">⚠ WARNING</div>
-								<div style="color: var(--steel-light); font-size: 13px; line-height: 1.6;">
-									Firmware upgrade will replace the entire system. Make sure to backup your configuration before proceeding.
-									Do not power off the device during the upgrade process.
-								</div>
-							</div>
-
-							<div class="form-group">
-								<label class="form-label">SELECT FIRMWARE IMAGE (.bin)</label>
-								<input type="file" id="firmware-file" accept=".bin" style="display: none;">
-								<div id="file-upload-area" style="border: 2px dashed var(--slate-border); border-radius: 6px; padding: 32px; text-align: center; cursor: pointer; transition: all 0.2s;">
-									<div style="color: var(--neon-cyan); font-size: 48px; margin-bottom: 12px;">📁</div>
-									<div style="color: var(--steel-light); font-weight: 500; margin-bottom: 8px;" id="file-upload-text">Click to select firmware file</div>
-									<div style="color: var(--steel-muted); font-size: 12px;">or drag and drop .bin file here</div>
-								</div>
-							</div>
-
-							<div id="firmware-info" style="display: none; margin: 24px 0; padding: 16px; background: var(--slate-bg); border-radius: 6px;">
-								<div class="form-label" style="margin-bottom: 12px;">FIRMWARE INFO</div>
-								<div id="firmware-details" style="font-family: monospace; font-size: 12px; color: var(--steel-light);"></div>
-							</div>
-
-							<div class="form-group" style="margin-top: 24px;">
-								<label style="display: flex; align-items: center; gap: 8px; cursor: pointer;">
-									<input type="checkbox" id="keep-settings" checked>
-									<span class="form-label" style="margin: 0;">Keep settings and retain the current configuration</span>
-								</label>
-							</div>
-
-							<div class="quick-actions" style="margin-top: 24px;">
-								<button class="action-btn" id="validate-firmware-btn" disabled>VALIDATE FIRMWARE</button>
-								<button class="action-btn" id="flash-firmware-btn" disabled style="background: var(--neon-red); border-color: var(--neon-red);">FLASH FIRMWARE</button>
-							</div>
-
-							<div id="upgrade-progress" style="display: none; margin-top: 24px; padding: 16px; background: var(--slate-bg); border-radius: 6px;">
-								<div class="form-label" style="margin-bottom: 12px;">UPGRADE PROGRESS</div>
-								<div id="upgrade-status" style="color: var(--steel-light); font-size: 13px; line-height: 1.8;"></div>
-							</div>
-						</div>
-					</div>
-				</div>
-
-				<div class="modal hidden" id="ssh-key-modal">
-					<div class="modal-backdrop"></div>
-					<div class="modal-content" style="max-width: 800px;">
-						<div class="modal-header">
-							<h3 class="modal-title">ADD SSH KEYS</h3>
-							<button class="modal-close" id="close-ssh-key-modal">&times;</button>
-						</div>
-						<div class="modal-body">
-							<div class="form-group">
-								<label class="form-label">PASTE PUBLIC KEYS (one per line, GitHub .keys format supported)</label>
-								<textarea id="ssh-key-paste-area" class="form-input" rows="6" placeholder="ssh-rsa AAAAB3NzaC1yc2E... user@host&#10;ssh-ed25519 AAAAC3NzaC1lZDI1NTE5... another@host"></textarea>
-							</div>
-							<div style="text-align: center; margin: 16px 0;">
-								<button class="action-btn" id="parse-keys-btn">PARSE KEYS</button>
-							</div>
-							<div id="parsed-keys-preview" style="display: none;">
-								<label class="form-label">KEYS TO ADD</label>
-								<div id="parsed-keys-list" style="max-height: 300px; overflow-y: auto; border: 1px solid var(--slate-border); border-radius: 6px; padding: 12px;">
-								</div>
-							</div>
-						</div>
-						<div class="modal-footer">
-							<button class="action-btn" id="cancel-ssh-key-btn">CANCEL</button>
-							<button class="action-btn" id="save-ssh-keys-btn" style="display: none;">ADD SELECTED KEYS</button>
-						</div>
-					</div>
-				</div>
-			</main>
-		</div>
-	</div>
-
-	<script type="module">
-		import { OpenWrtCore } from './js/core.js';
-		window.app = new OpenWrtCore();
-		window.app.init();
-	</script>
-</body>
+		<script type="module">
+			import { OpenWrtCore } from './js/core.js';
+			window.app = new OpenWrtCore();
+			window.app.init();
+		</script>
+	</body>
 </html>

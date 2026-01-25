@@ -17,9 +17,9 @@ export class OpenWrtCore {
 
 	getModuleForRoute(basePath) {
 		const routeModuleMap = {
-			'dashboard': 'dashboard',
-			'network': 'network',
-			'system': 'system'
+			dashboard: 'dashboard',
+			network: 'network',
+			system: 'system'
 		};
 		return routeModuleMap[basePath];
 	}
@@ -260,10 +260,15 @@ export class OpenWrtCore {
 				jsonrpc: '2.0',
 				id: 1,
 				method: 'call',
-				params: ['00000000000000000000000000000000', 'session', 'login', {
-					username,
-					password
-				}]
+				params: [
+					'00000000000000000000000000000000',
+					'session',
+					'login',
+					{
+						username,
+						password
+					}
+				]
 			})
 		});
 
@@ -316,7 +321,7 @@ export class OpenWrtCore {
 		const loginForm = document.getElementById('login-form');
 		const rememberCheckbox = document.getElementById('remember-me');
 
-		loginForm.onsubmit = async (e) => {
+		loginForm.onsubmit = async e => {
 			e.preventDefault();
 			const username = document.getElementById('username').value;
 			const password = document.getElementById('password').value;
@@ -484,7 +489,7 @@ export class OpenWrtCore {
 	setupSubTabs(pageId, loadHandlers) {
 		const listeners = [];
 
-		const showSubTab = (tab) => {
+		const showSubTab = tab => {
 			document.querySelectorAll(`#${pageId} .tab-content`).forEach(content => {
 				content.classList.add('hidden');
 			});
@@ -505,7 +510,7 @@ export class OpenWrtCore {
 
 		const attachListeners = () => {
 			document.querySelectorAll(`#${pageId} .tab-btn`).forEach(btn => {
-				const handler = (e) => {
+				const handler = e => {
 					const tab = e.target.getAttribute('data-tab');
 					const basePath = pageId.replace('-page', '');
 					this.navigate(`/${basePath}/${tab}`);

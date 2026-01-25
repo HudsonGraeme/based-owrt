@@ -26,7 +26,7 @@ export default class NetworkModule {
 		const interfacesTable = document.getElementById('interfaces-table');
 		if (!interfacesTable || this.actionListener) return;
 
-		this.actionListener = (e) => {
+		this.actionListener = e => {
 			const button = e.target.closest('[data-action]');
 			if (!button) return;
 
@@ -80,9 +80,9 @@ export default class NetworkModule {
 		const proto = iface.proto || 'none';
 		const ipv4 = iface['ipv4-address']?.[0]?.address || '---.---.---.---';
 		const status = iface.up ? 'UP' : 'DOWN';
-		const statusBadge = iface.up ?
-			this.core.renderBadge('success', status) :
-			this.core.renderBadge('error', status);
+		const statusBadge = iface.up
+			? this.core.renderBadge('success', status)
+			: this.core.renderBadge('error', status);
 
 		return `
 			<tr>

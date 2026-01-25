@@ -28,7 +28,7 @@ export default class DashboardModule {
 	}
 
 	parseMemoryPercent(memory) {
-		return ((memory.total - memory.free) / memory.total * 100).toFixed(0);
+		return (((memory.total - memory.free) / memory.total) * 100).toFixed(0);
 	}
 
 	renderSystemInfo(boardInfo, systemInfo) {
@@ -132,7 +132,8 @@ export default class DashboardModule {
 
 	parseNetworkStats(content) {
 		const lines = content.split('\n').slice(2);
-		let totalRx = 0, totalTx = 0;
+		let totalRx = 0,
+			totalTx = 0;
 
 		lines.forEach(line => {
 			if (!line.trim()) return;
@@ -201,7 +202,9 @@ export default class DashboardModule {
 	parseWANStatus(interfaces) {
 		let lanIface = interfaces.find(i => i.interface === 'lan' || i.device === 'br-lan');
 		if (!lanIface) {
-			lanIface = interfaces.find(i => i.up && i['ipv4-address'] && i['ipv4-address'].length > 0 && i.interface !== 'loopback');
+			lanIface = interfaces.find(
+				i => i.up && i['ipv4-address'] && i['ipv4-address'].length > 0 && i.interface !== 'loopback'
+			);
 		}
 
 		let internetIface = null;
@@ -287,7 +290,10 @@ export default class DashboardModule {
 	}
 
 	parseSystemLog(stdout) {
-		return stdout.split('\n').filter(l => l.trim()).slice(-20);
+		return stdout
+			.split('\n')
+			.filter(l => l.trim())
+			.slice(-20);
 	}
 
 	renderSystemLog(lines) {
@@ -299,15 +305,17 @@ export default class DashboardModule {
 			return;
 		}
 
-		const logHtml = lines.map(line => {
-			let className = 'log-line';
-			if (line.toLowerCase().includes('error') || line.toLowerCase().includes('fail')) {
-				className += ' error';
-			} else if (line.toLowerCase().includes('warn')) {
-				className += ' warn';
-			}
-			return `<div class="${className}">${this.core.escapeHtml(line)}</div>`;
-		}).join('');
+		const logHtml = lines
+			.map(line => {
+				let className = 'log-line';
+				if (line.toLowerCase().includes('error') || line.toLowerCase().includes('fail')) {
+					className += ' error';
+				} else if (line.toLowerCase().includes('warn')) {
+					className += ' warn';
+				}
+				return `<div class="${className}">${this.core.escapeHtml(line)}</div>`;
+			})
+			.join('');
 
 		logEl.innerHTML = logHtml;
 	}
@@ -431,7 +439,7 @@ export default class DashboardModule {
 		ctx.strokeStyle = 'rgba(255, 255, 255, 0.1)';
 		ctx.lineWidth = 1;
 		for (let i = 0; i <= 4; i++) {
-			const y = padding + (i * (height - padding * 2) / 4);
+			const y = padding + (i * (height - padding * 2)) / 4;
 			ctx.beginPath();
 			ctx.moveTo(padding, y);
 			ctx.lineTo(width - padding, y);
@@ -443,7 +451,7 @@ export default class DashboardModule {
 		ctx.moveTo(padding, height - padding);
 		downData.forEach((val, i) => {
 			const x = padding + i * stepX;
-			const y = height - padding - ((val / max) * (height - padding * 2));
+			const y = height - padding - (val / max) * (height - padding * 2);
 			ctx.lineTo(x, y);
 		});
 		ctx.lineTo(width - padding, height - padding);
@@ -455,7 +463,7 @@ export default class DashboardModule {
 		ctx.beginPath();
 		downData.forEach((val, i) => {
 			const x = padding + i * stepX;
-			const y = height - padding - ((val / max) * (height - padding * 2));
+			const y = height - padding - (val / max) * (height - padding * 2);
 			if (i === 0) ctx.moveTo(x, y);
 			else ctx.lineTo(x, y);
 		});
@@ -466,7 +474,7 @@ export default class DashboardModule {
 		ctx.moveTo(padding, height - padding);
 		upData.forEach((val, i) => {
 			const x = padding + i * stepX;
-			const y = height - padding - ((val / max) * (height - padding * 2));
+			const y = height - padding - (val / max) * (height - padding * 2);
 			ctx.lineTo(x, y);
 		});
 		ctx.lineTo(width - padding, height - padding);
@@ -478,7 +486,7 @@ export default class DashboardModule {
 		ctx.beginPath();
 		upData.forEach((val, i) => {
 			const x = padding + i * stepX;
-			const y = height - padding - ((val / max) * (height - padding * 2));
+			const y = height - padding - (val / max) * (height - padding * 2);
 			if (i === 0) ctx.moveTo(x, y);
 			else ctx.lineTo(x, y);
 		});

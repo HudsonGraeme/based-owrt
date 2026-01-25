@@ -11,6 +11,9 @@ devDependencies:
   clean-css:
     specifier: ^5.3.3
     version: 5.3.3
+  prettier:
+    specifier: ^3.8.1
+    version: 3.8.1
   terser:
     specifier: ^5.36.0
     version: 5.46.0
@@ -73,6 +76,12 @@ packages:
 
   /commander@2.20.3:
     resolution: {integrity: sha512-GpVkmM8vF2vQUkj2LvZmD35JxeJOLCwJ9cUkugyk2nuhbv3+mJvpLYYt+0+USMxE+oj+ey/lJEnhZw75x/OMcQ==}
+    dev: true
+
+  /prettier@3.8.1:
+    resolution: {integrity: sha512-UOnG6LftzbdaHZcKoPFtOcCKztrQ57WkHDeRD9t/PTQtmT0NHSeWWepj6pS0z/N7+08BHFDQVUrfmfMRcZwbMg==}
+    engines: {node: '>=14'}
+    hasBin: true
     dev: true
 
   /readdirp@5.0.0:

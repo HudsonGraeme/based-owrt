@@ -24,9 +24,9 @@ export default class VPNModule {
 
 	renderWireGuardRow(iface) {
 		const enabled = iface.disabled !== '1';
-		const statusBadge = enabled ?
-			this.core.renderBadge('success', 'ENABLED') :
-			this.core.renderBadge('error', 'DISABLED');
+		const statusBadge = enabled
+			? this.core.renderBadge('success', 'ENABLED')
+			: this.core.renderBadge('error', 'DISABLED');
 
 		return `
 			<tr>

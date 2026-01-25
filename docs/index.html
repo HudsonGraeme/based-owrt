@@ -1,371 +1,387 @@
-<!DOCTYPE html>
+<!doctype html>
 <html lang="en">
-<head>
-	<meta charset="UTF-8">
-	<meta name="viewport" content="width=device-width, initial-scale=1.0">
-	<title>Based - Live Demo</title>
-	<link rel="stylesheet" href="../custom/app.css">
-	<style>
-		.demo-banner {
-			position: fixed;
-			top: 0;
-			left: 0;
-			right: 0;
-			background: rgba(255, 165, 0, 0.1);
-			border-bottom: 1px solid rgba(255, 165, 0, 0.3);
-			padding: 8px 16px;
-			text-align: center;
-			color: #ffa500;
-			font-size: 14px;
-			z-index: 10000;
-			backdrop-filter: blur(10px);
-		}
+	<head>
+		<meta charset="UTF-8" />
+		<meta name="viewport" content="width=device-width, initial-scale=1.0" />
+		<title>Based - Live Demo</title>
+		<link rel="stylesheet" href="../custom/app.css" />
+		<style>
+			.demo-banner {
+				position: fixed;
+				top: 0;
+				left: 0;
+				right: 0;
+				background: rgba(255, 165, 0, 0.1);
+				border-bottom: 1px solid rgba(255, 165, 0, 0.3);
+				padding: 8px 16px;
+				text-align: center;
+				color: #ffa500;
+				font-size: 14px;
+				z-index: 10000;
+				backdrop-filter: blur(10px);
+			}
 
-		#main-view {
-			padding-top: 36px;
-		}
-	</style>
-</head>
-<body>
-	<div class="demo-banner">
-		Live Demo Mode - All data is simulated
-	</div>
+			#main-view {
+				padding-top: 36px;
+			}
+		</style>
+	</head>
+	<body>
+		<div class="demo-banner">Live Demo Mode - All data is simulated</div>
 
-	<div id="login-view" class="hidden">
-		<div class="login-container">
-			<div class="login-card">
-				<h1>Based</h1>
-				<p class="login-subtitle">Modern OpenWrt Management</p>
-				<form id="login-form">
-					<input type="text" id="username" placeholder="Username" value="demo" required>
-					<input type="password" id="password" placeholder="Password" value="demo" required>
-					<div class="login-options">
-						<label>
-							<input type="checkbox" id="remember-me">
-							<span>Remember me</span>
-						</label>
-					</div>
-					<button type="submit" class="btn btn-primary">Sign In</button>
-				</form>
-			</div>
-		</div>
-	</div>
-
-	<div id="main-view">
-		<nav class="nav">
-			<div class="nav-brand">
-				<span class="nav-logo">Based</span>
-			</div>
-			<div class="nav-links">
-				<a href="#/dashboard" data-page="dashboard" class="active">
-					<svg viewBox="0 0 20 20" fill="currentColor"><path d="M3 4a1 1 0 011-1h12a1 1 0 011 1v2a1 1 0 01-1 1H4a1 1 0 01-1-1V4zM3 10a1 1 0 011-1h6a1 1 0 011 1v6a1 1 0 01-1 1H4a1 1 0 01-1-1v-6zM14 9a1 1 0 00-1 1v6a1 1 0 001 1h2a1 1 0 001-1v-6a1 1 0 00-1-1h-2z"/></svg>
-					Dashboard
-				</a>
-				<a href="#/network" data-page="network" data-feature="network">
-					<svg viewBox="0 0 20 20" fill="currentColor"><path fill-rule="evenodd" d="M5.05 4.05a7 7 0 119.9 9.9L10 18.9l-4.95-4.95a7 7 0 010-9.9zM10 11a2 2 0 100-4 2 2 0 000 4z" clip-rule="evenodd"/></svg>
-					Network
-				</a>
-				<a href="#/system" data-page="system" data-feature="system">
-					<svg viewBox="0 0 20 20" fill="currentColor"><path fill-rule="evenodd" d="M11.49 3.17c-.38-1.56-2.6-1.56-2.98 0a1.532 1.532 0 01-2.286.948c-1.372-.836-2.942.734-2.106 2.106.54.886.061 2.042-.947 2.287-1.561.379-1.561 2.6 0 2.978a1.532 1.532 0 01.947 2.287c-.836 1.372.734 2.942 2.106 2.106a1.532 1.532 0 012.287.947c.379 1.561 2.6 1.561 2.978 0a1.533 1.533 0 012.287-.947c1.372.836 2.942-.734 2.106-2.106a1.533 1.533 0 01.947-2.287c1.561-.379 1.561-2.6 0-2.978a1.532 1.532 0 01-.947-2.287c.836-1.372-.734-2.942-2.106-2.106a1.532 1.532 0 01-2.287-.947zM10 13a3 3 0 100-6 3 3 0 000 6z" clip-rule="evenodd"/></svg>
-					System
-				</a>
-			</div>
-			<div class="nav-actions">
-				<button id="logout-btn" class="btn btn-secondary">Logout</button>
-			</div>
-		</nav>
-
-		<div id="dashboard-page" class="page">
-			<div class="hero">
-				<div class="hero-card" id="wan-status-hero">
-					<div class="hero-content">
-						<div class="hero-status">
-							<span class="hero-label">WAN Status</span>
-							<h2 id="wan-status">ONLINE</h2>
+		<div id="login-view" class="hidden">
+			<div class="login-container">
+				<div class="login-card">
+					<h1>Based</h1>
+					<p class="login-subtitle">Modern OpenWrt Management</p>
+					<form id="login-form">
+						<input type="text" id="username" placeholder="Username" value="demo" required />
+						<input type="password" id="password" placeholder="Password" value="demo" required />
+						<div class="login-options">
+							<label>
+								<input type="checkbox" id="remember-me" />
+								<span>Remember me</span>
+							</label>
 						</div>
-						<div class="hero-stats">
-							<div class="stat-group">
-								<span class="stat-label">WAN IP</span>
-								<span class="stat-value" id="wan-ip">203.0.113.42</span>
-							</div>
-							<div class="stat-group">
-								<span class="stat-label">LAN IP</span>
-								<span class="stat-value" id="lan-ip">192.168.1.1</span>
-							</div>
-						</div>
-					</div>
-				</div>
-			</div>
-
-			<div class="cards">
-				<div class="card">
-					<div class="card-header">
-						<h3>System</h3>
-					</div>
-					<div class="card-body stats-grid">
-						<div class="stat-item">
-							<span class="stat-label">Hostname</span>
-							<span class="stat-value" id="hostname">OpenWrt</span>
-						</div>
-						<div class="stat-item">
-							<span class="stat-label">Uptime</span>
-							<span class="stat-value" id="uptime">5d 12h 34m</span>
-						</div>
-						<div class="stat-item">
-							<span class="stat-label">CPU</span>
-							<span class="stat-value" id="cpu">24.5%</span>
-							<div class="progress-bar">
-								<div class="progress-fill" id="cpu-bar" style="width: 24.5%"></div>
-							</div>
-						</div>
-						<div class="stat-item">
-							<span class="stat-label">Memory</span>
-							<span class="stat-value" id="memory">124MB / 512MB (24%)</span>
-							<div class="progress-bar">
-								<div class="progress-fill" id="memory-bar" style="width: 24%"></div>
-							</div>
-						</div>
-					</div>
-				</div>
-
-				<div class="card">
-					<div class="card-header">
-						<h3>Bandwidth</h3>
-					</div>
-					<div class="card-body">
-						<div class="bandwidth-stats">
-							<div class="bandwidth-stat">
-								<span class="stat-label">Download</span>
-								<span class="stat-value" id="bandwidth-down">12.5 Mbps</span>
-							</div>
-							<div class="bandwidth-stat">
-								<span class="stat-label">Upload</span>
-								<span class="stat-value" id="bandwidth-up">3.2 Mbps</span>
-							</div>
-						</div>
-						<canvas id="bandwidth-graph"></canvas>
-					</div>
-				</div>
-
-				<div class="card">
-					<div class="card-header">
-						<h3>Active Connections</h3>
-						<span class="badge badge-primary" id="clients">3</span>
-					</div>
-					<div class="card-body">
-						<table id="connections-table">
-							<thead>
-								<tr>
-									<th>IP Address</th>
-									<th>MAC Address</th>
-									<th>Hostname</th>
-									<th>Status</th>
-								</tr>
-							</thead>
-							<tbody></tbody>
-						</table>
-					</div>
-				</div>
-
-				<div class="card">
-					<div class="card-header">
-						<h3>System Log</h3>
-					</div>
-					<div class="card-body">
-						<div id="system-log" class="log-container"></div>
-					</div>
+						<button type="submit" class="btn btn-primary">Sign In</button>
+					</form>
 				</div>
 			</div>
 		</div>
 
-		<div id="network-page" class="page hidden">
-			<div class="page-header">
-				<h1>Network</h1>
-			</div>
+		<div id="main-view">
+			<nav class="nav">
+				<div class="nav-brand">
+					<span class="nav-logo">Based</span>
+				</div>
+				<div class="nav-links">
+					<a href="#/dashboard" data-page="dashboard" class="active">
+						<svg viewBox="0 0 20 20" fill="currentColor">
+							<path
+								d="M3 4a1 1 0 011-1h12a1 1 0 011 1v2a1 1 0 01-1 1H4a1 1 0 01-1-1V4zM3 10a1 1 0 011-1h6a1 1 0 011 1v6a1 1 0 01-1 1H4a1 1 0 01-1-1v-6zM14 9a1 1 0 00-1 1v6a1 1 0 001 1h2a1 1 0 001-1v-6a1 1 0 00-1-1h-2z"
+							/>
+						</svg>
+						Dashboard
+					</a>
+					<a href="#/network" data-page="network" data-feature="network">
+						<svg viewBox="0 0 20 20" fill="currentColor">
+							<path
+								fill-rule="evenodd"
+								d="M5.05 4.05a7 7 0 119.9 9.9L10 18.9l-4.95-4.95a7 7 0 010-9.9zM10 11a2 2 0 100-4 2 2 0 000 4z"
+								clip-rule="evenodd"
+							/>
+						</svg>
+						Network
+					</a>
+					<a href="#/system" data-page="system" data-feature="system">
+						<svg viewBox="0 0 20 20" fill="currentColor">
+							<path
+								fill-rule="evenodd"
+								d="M11.49 3.17c-.38-1.56-2.6-1.56-2.98 0a1.532 1.532 0 01-2.286.948c-1.372-.836-2.942.734-2.106 2.106.54.886.061 2.042-.947 2.287-1.561.379-1.561 2.6 0 2.978a1.532 1.532 0 01.947 2.287c-.836 1.372.734 2.942 2.106 2.106a1.532 1.532 0 012.287.947c.379 1.561 2.6 1.561 2.978 0a1.533 1.533 0 012.287-.947c1.372.836 2.942-.734 2.106-2.106a1.533 1.533 0 01.947-2.287c1.561-.379 1.561-2.6 0-2.978a1.532 1.532 0 01-.947-2.287c.836-1.372-.734-2.942-2.106-2.106a1.532 1.532 0 01-2.287-.947zM10 13a3 3 0 100-6 3 3 0 000 6z"
+								clip-rule="evenodd"
+							/>
+						</svg>
+						System
+					</a>
+				</div>
+				<div class="nav-actions">
+					<button id="logout-btn" class="btn btn-secondary">Logout</button>
+				</div>
+			</nav>
 
-			<div class="tabs">
-				<button class="tab-btn active" data-tab="interfaces">Interfaces</button>
-			</div>
-
-			<div id="tab-interfaces" class="tab-content">
-				<div class="card">
-					<div class="card-header">
-						<h3>Network Interfaces</h3>
-					</div>
-					<div class="card-body">
-						<table id="interfaces-table">
-							<thead>
-								<tr>
-									<th>Interface</th>
-									<th>Protocol</th>
-									<th>IP Address</th>
-									<th>Device</th>
-									<th>Status</th>
-									<th>Actions</th>
-								</tr>
-							</thead>
-							<tbody></tbody>
-						</table>
+			<div id="dashboard-page" class="page">
+				<div class="hero">
+					<div class="hero-card" id="wan-status-hero">
+						<div class="hero-content">
+							<div class="hero-status">
+								<span class="hero-label">WAN Status</span>
+								<h2 id="wan-status">ONLINE</h2>
+							</div>
+							<div class="hero-stats">
+								<div class="stat-group">
+									<span class="stat-label">WAN IP</span>
+									<span class="stat-value" id="wan-ip">203.0.113.42</span>
+								</div>
+								<div class="stat-group">
+									<span class="stat-label">LAN IP</span>
+									<span class="stat-value" id="lan-ip">192.168.1.1</span>
+								</div>
+							</div>
+						</div>
 					</div>
 				</div>
-			</div>
-		</div>
 
-		<div id="system-page" class="page hidden">
-			<div class="page-header">
-				<h1>System</h1>
-			</div>
-
-			<div class="tabs">
-				<button class="tab-btn active" data-tab="general">General</button>
-				<button class="tab-btn" data-tab="software">Software</button>
-			</div>
-
-			<div id="tab-general" class="tab-content">
-				<div class="card">
-					<div class="card-header">
-						<h3>General Settings</h3>
+				<div class="cards">
+					<div class="card">
+						<div class="card-header">
+							<h3>System</h3>
+						</div>
+						<div class="card-body stats-grid">
+							<div class="stat-item">
+								<span class="stat-label">Hostname</span>
+								<span class="stat-value" id="hostname">OpenWrt</span>
+							</div>
+							<div class="stat-item">
+								<span class="stat-label">Uptime</span>
+								<span class="stat-value" id="uptime">5d 12h 34m</span>
+							</div>
+							<div class="stat-item">
+								<span class="stat-label">CPU</span>
+								<span class="stat-value" id="cpu">24.5%</span>
+								<div class="progress-bar">
+									<div class="progress-fill" id="cpu-bar" style="width: 24.5%"></div>
+								</div>
+							</div>
+							<div class="stat-item">
+								<span class="stat-label">Memory</span>
+								<span class="stat-value" id="memory">124MB / 512MB (24%)</span>
+								<div class="progress-bar">
+									<div class="progress-fill" id="memory-bar" style="width: 24%"></div>
+								</div>
+							</div>
+						</div>
 					</div>
-					<div class="card-body">
-						<div class="form-group">
-							<label for="system-hostname">Hostname</label>
-							<input type="text" id="system-hostname" value="OpenWrt">
+
+					<div class="card">
+						<div class="card-header">
+							<h3>Bandwidth</h3>
+						</div>
+						<div class="card-body">
+							<div class="bandwidth-stats">
+								<div class="bandwidth-stat">
+									<span class="stat-label">Download</span>
+									<span class="stat-value" id="bandwidth-down">12.5 Mbps</span>
+								</div>
+								<div class="bandwidth-stat">
+									<span class="stat-label">Upload</span>
+									<span class="stat-value" id="bandwidth-up">3.2 Mbps</span>
+								</div>
+							</div>
+							<canvas id="bandwidth-graph"></canvas>
+						</div>
+					</div>
+
+					<div class="card">
+						<div class="card-header">
+							<h3>Active Connections</h3>
+							<span class="badge badge-primary" id="clients">3</span>
+						</div>
+						<div class="card-body">
+							<table id="connections-table">
+								<thead>
+									<tr>
+										<th>IP Address</th>
+										<th>MAC Address</th>
+										<th>Hostname</th>
+										<th>Status</th>
+									</tr>
+								</thead>
+								<tbody></tbody>
+							</table>
+						</div>
+					</div>
+
+					<div class="card">
+						<div class="card-header">
+							<h3>System Log</h3>
+						</div>
+						<div class="card-body">
+							<div id="system-log" class="log-container"></div>
 						</div>
 					</div>
 				</div>
 			</div>
 
-			<div id="tab-software" class="tab-content hidden">
-				<div class="card">
-					<div class="card-header">
-						<h3>Installed Packages</h3>
+			<div id="network-page" class="page hidden">
+				<div class="page-header">
+					<h1>Network</h1>
+				</div>
+
+				<div class="tabs">
+					<button class="tab-btn active" data-tab="interfaces">Interfaces</button>
+				</div>
+
+				<div id="tab-interfaces" class="tab-content">
+					<div class="card">
+						<div class="card-header">
+							<h3>Network Interfaces</h3>
+						</div>
+						<div class="card-body">
+							<table id="interfaces-table">
+								<thead>
+									<tr>
+										<th>Interface</th>
+										<th>Protocol</th>
+										<th>IP Address</th>
+										<th>Device</th>
+										<th>Status</th>
+										<th>Actions</th>
+									</tr>
+								</thead>
+								<tbody></tbody>
+							</table>
+						</div>
 					</div>
-					<div class="card-body">
-						<table id="packages-table">
-							<thead>
-								<tr>
-									<th>Package</th>
-									<th>Version</th>
-									<th>Status</th>
-								</tr>
-							</thead>
-							<tbody></tbody>
-						</table>
+				</div>
+			</div>
+
+			<div id="system-page" class="page hidden">
+				<div class="page-header">
+					<h1>System</h1>
+				</div>
+
+				<div class="tabs">
+					<button class="tab-btn active" data-tab="general">General</button>
+					<button class="tab-btn" data-tab="software">Software</button>
+				</div>
+
+				<div id="tab-general" class="tab-content">
+					<div class="card">
+						<div class="card-header">
+							<h3>General Settings</h3>
+						</div>
+						<div class="card-body">
+							<div class="form-group">
+								<label for="system-hostname">Hostname</label>
+								<input type="text" id="system-hostname" value="OpenWrt" />
+							</div>
+						</div>
+					</div>
+				</div>
+
+				<div id="tab-software" class="tab-content hidden">
+					<div class="card">
+						<div class="card-header">
+							<h3>Installed Packages</h3>
+						</div>
+						<div class="card-body">
+							<table id="packages-table">
+								<thead>
+									<tr>
+										<th>Package</th>
+										<th>Version</th>
+										<th>Status</th>
+									</tr>
+								</thead>
+								<tbody></tbody>
+							</table>
+						</div>
 					</div>
 				</div>
 			</div>
 		</div>
-	</div>
 
-	<script type="module">
-		import { OpenWrtCore } from '../custom/js/core.js';
+		<script type="module">
+			import { OpenWrtCore } from '../custom/js/core.js';
 
-		class MockUbus extends OpenWrtCore {
-			constructor() {
-				super();
-				this.sessionId = 'demo-session';
-				this.mockData = {
-					systemInfo: {
-						uptime: 476040,
-						memory: { total: 536870912, free: 411041792 }
-					},
-					boardInfo: { hostname: 'OpenWrt-Demo' },
-					interfaces: [
-						{
-							interface: 'lan',
-							proto: 'static',
-							up: true,
-							device: 'br-lan',
-							'ipv4-address': [{ address: '192.168.1.1' }]
+			class MockUbus extends OpenWrtCore {
+				constructor() {
+					super();
+					this.sessionId = 'demo-session';
+					this.mockData = {
+						systemInfo: {
+							uptime: 476040,
+							memory: { total: 536870912, free: 411041792 }
 						},
-						{
-							interface: 'wan',
-							proto: 'dhcp',
-							up: true,
-							device: 'eth1',
-							'ipv4-address': [{ address: '203.0.113.42' }],
-							route: [{ target: '0.0.0.0', nexthop: '203.0.113.1' }]
-						}
-					],
-					dhcpLeases: {
-						dhcp_leases: [
-							{ ipaddr: '192.168.1.100', macaddr: '00:11:22:33:44:55', hostname: 'laptop' },
-							{ ipaddr: '192.168.1.101', macaddr: '00:11:22:33:44:66', hostname: 'phone' },
-							{ ipaddr: '192.168.1.102', macaddr: '00:11:22:33:44:77', hostname: 'tablet' }
-						]
-					},
-					packages: 'Package: base-files\nVersion: 1467-r23630\n\nPackage: busybox\nVersion: 1.35.0-4\n\nPackage: dnsmasq\nVersion: 2.86-15\n\nPackage: firewall4\nVersion: 2023-02-17\n\nPackage: kmod-ath9k\nVersion: 5.15.137\n',
-					cpuStat: 'cpu  12345 0 6789 123456 1234 0 567 0 0 0\n',
-					netDev: 'Inter-|   Receive                                                |  Transmit\n face |bytes    packets errs drop fifo frame compressed multicast|bytes    packets errs drop fifo colls carrier compressed\neth0: 1048576000 1024000    0    0    0     0          0         0 524288000  512000    0    0    0     0       0          0\nlo:       0       0    0    0    0     0          0         0        0       0    0    0    0     0       0          0\n',
-					arpTable: 'IP address       HW type     Flags       HW address            Mask     Device\n192.168.1.100    0x1         0x2         00:11:22:33:44:55     *        br-lan\n192.168.1.101    0x1         0x2         00:11:22:33:44:66     *        br-lan\n192.168.1.102    0x1         0x2         00:11:22:33:44:77     *        br-lan\n',
-					syslog: `Jan 25 12:34:56 OpenWrt daemon.info dnsmasq[1234]: started, version 2.86
+						boardInfo: { hostname: 'OpenWrt-Demo' },
+						interfaces: [
+							{
+								interface: 'lan',
+								proto: 'static',
+								up: true,
+								device: 'br-lan',
+								'ipv4-address': [{ address: '192.168.1.1' }]
+							},
+							{
+								interface: 'wan',
+								proto: 'dhcp',
+								up: true,
+								device: 'eth1',
+								'ipv4-address': [{ address: '203.0.113.42' }],
+								route: [{ target: '0.0.0.0', nexthop: '203.0.113.1' }]
+							}
+						],
+						dhcpLeases: {
+							dhcp_leases: [
+								{ ipaddr: '192.168.1.100', macaddr: '00:11:22:33:44:55', hostname: 'laptop' },
+								{ ipaddr: '192.168.1.101', macaddr: '00:11:22:33:44:66', hostname: 'phone' },
+								{ ipaddr: '192.168.1.102', macaddr: '00:11:22:33:44:77', hostname: 'tablet' }
+							]
+						},
+						packages:
+							'Package: base-files\nVersion: 1467-r23630\n\nPackage: busybox\nVersion: 1.35.0-4\n\nPackage: dnsmasq\nVersion: 2.86-15\n\nPackage: firewall4\nVersion: 2023-02-17\n\nPackage: kmod-ath9k\nVersion: 5.15.137\n',
+						cpuStat: 'cpu  12345 0 6789 123456 1234 0 567 0 0 0\n',
+						netDev: 'Inter-|   Receive                                                |  Transmit\n face |bytes    packets errs drop fifo frame compressed multicast|bytes    packets errs drop fifo colls carrier compressed\neth0: 1048576000 1024000    0    0    0     0          0         0 524288000  512000    0    0    0     0       0          0\nlo:       0       0    0    0    0     0          0         0        0       0    0    0    0     0       0          0\n',
+						arpTable:
+							'IP address       HW type     Flags       HW address            Mask     Device\n192.168.1.100    0x1         0x2         00:11:22:33:44:55     *        br-lan\n192.168.1.101    0x1         0x2         00:11:22:33:44:66     *        br-lan\n192.168.1.102    0x1         0x2         00:11:22:33:44:77     *        br-lan\n',
+						syslog: `Jan 25 12:34:56 OpenWrt daemon.info dnsmasq[1234]: started, version 2.86
 Jan 25 12:35:12 OpenWrt daemon.info dnsmasq-dhcp[1234]: DHCP, IP range 192.168.1.100 -- 192.168.1.200
 Jan 25 12:36:45 OpenWrt kern.info kernel: [12345.678] ath9k: Atheros AR9344 rev 2
 Jan 25 12:37:22 OpenWrt daemon.notice netifd: Interface 'wan' is now up`
-				};
+					};
+				}
+
+				async ubusCall(object, method, params) {
+					await new Promise(resolve => setTimeout(resolve, 100));
+
+					if (object === 'system' && method === 'info') {
+						return [0, this.mockData.systemInfo];
+					}
+					if (object === 'system' && method === 'board') {
+						return [0, this.mockData.boardInfo];
+					}
+					if (object === 'network.interface' && method === 'dump') {
+						return [0, { interface: this.mockData.interfaces }];
+					}
+					if (object === 'luci-rpc' && method === 'getDHCPLeases') {
+						return [0, this.mockData.dhcpLeases];
+					}
+					if (object === 'file' && method === 'read') {
+						if (params.path === '/proc/stat') {
+							return [0, { data: this.mockData.cpuStat }];
+						}
+						if (params.path === '/proc/net/dev') {
+							return [0, { data: this.mockData.netDev }];
+						}
+						if (params.path === '/proc/net/arp') {
+							return [0, { data: this.mockData.arpTable }];
+						}
+						if (params.path === '/usr/lib/opkg/status') {
+							return [0, { data: this.mockData.packages }];
+						}
+					}
+					if (object === 'file' && method === 'exec') {
+						if (params.command === '/usr/libexec/syslog-wrapper') {
+							return [0, { stdout: this.mockData.syslog }];
+						}
+					}
+					if (object === 'session' && method === 'access') {
+						return [0, {}];
+					}
+
+					return [1, null];
+				}
+
+				async login() {
+					this.sessionId = 'demo-session';
+					await this.loadFeatures();
+					await this.loadModules();
+					this.applyFeatureFlags();
+					this.showMainView();
+					this.startApplication();
+				}
+
+				async validateSession() {
+					return false;
+				}
+
+				getSavedCredentials() {
+					return null;
+				}
 			}
 
-			async ubusCall(object, method, params) {
-				await new Promise(resolve => setTimeout(resolve, 100));
-
-				if (object === 'system' && method === 'info') {
-					return [0, this.mockData.systemInfo];
-				}
-				if (object === 'system' && method === 'board') {
-					return [0, this.mockData.boardInfo];
-				}
-				if (object === 'network.interface' && method === 'dump') {
-					return [0, { interface: this.mockData.interfaces }];
-				}
-				if (object === 'luci-rpc' && method === 'getDHCPLeases') {
-					return [0, this.mockData.dhcpLeases];
-				}
-				if (object === 'file' && method === 'read') {
-					if (params.path === '/proc/stat') {
-						return [0, { data: this.mockData.cpuStat }];
-					}
-					if (params.path === '/proc/net/dev') {
-						return [0, { data: this.mockData.netDev }];
-					}
-					if (params.path === '/proc/net/arp') {
-						return [0, { data: this.mockData.arpTable }];
-					}
-					if (params.path === '/usr/lib/opkg/status') {
-						return [0, { data: this.mockData.packages }];
-					}
-				}
-				if (object === 'file' && method === 'exec') {
-					if (params.command === '/usr/libexec/syslog-wrapper') {
-						return [0, { stdout: this.mockData.syslog }];
-					}
-				}
-				if (object === 'session' && method === 'access') {
-					return [0, {}];
-				}
-
-				return [1, null];
-			}
-
-			async login() {
-				this.sessionId = 'demo-session';
-				await this.loadFeatures();
-				await this.loadModules();
-				this.applyFeatureFlags();
-				this.showMainView();
-				this.startApplication();
-			}
-
-			async validateSession() {
-				return false;
-			}
-
-			getSavedCredentials() {
-				return null;
-			}
-		}
-
-		const app = new MockUbus();
-		app.init();
-	</script>
-</body>
+			const app = new MockUbus();
+			app.init();
+		</script>
+	</body>
 </html>

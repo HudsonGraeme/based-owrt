@@ -19,12 +19,15 @@
 		"dev": "node scripts/watch.js qemu",
 		"dev:physical": "node scripts/watch.js",
 		"deploy": "scp -r custom/* root@192.168.1.1:/www/custom/",
-		"build": "node scripts/build.js"
+		"build": "node scripts/build.js",
+		"format": "prettier --write \"custom/**/*.{js,css,html}\" \"scripts/**/*.js\" \"docs/**/*.html\"",
+		"format:check": "prettier --check \"custom/**/*.{js,css,html}\" \"scripts/**/*.js\" \"docs/**/*.html\""
 	},
 	"devDependencies": {
 		"chokidar": "^5.0.0",
-		"terser": "^5.36.0",
-		"clean-css": "^5.3.3"
+		"clean-css": "^5.3.3",
+		"prettier": "^3.8.1",
+		"terser": "^5.36.0"
 	},
 	"repository": {
 		"type": "git",

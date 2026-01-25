@@ -24,9 +24,9 @@ export default class ServicesModule {
 
 	renderQoSRow(rule) {
 		const enabled = rule.enabled !== '0';
-		const statusBadge = enabled ?
-			this.core.renderBadge('success', 'ACTIVE') :
-			this.core.renderBadge('error', 'INACTIVE');
+		const statusBadge = enabled
+			? this.core.renderBadge('success', 'ACTIVE')
+			: this.core.renderBadge('error', 'INACTIVE');
 
 		return `
 			<tr>
@@ -92,9 +92,9 @@ export default class ServicesModule {
 
 	renderDDNSRow(service) {
 		const enabled = service.enabled === '1';
-		const statusBadge = enabled ?
-			this.core.renderBadge('success', 'ENABLED') :
-			this.core.renderBadge('error', 'DISABLED');
+		const statusBadge = enabled
+			? this.core.renderBadge('success', 'ENABLED')
+			: this.core.renderBadge('error', 'DISABLED');
 
 		return `
 			<tr>

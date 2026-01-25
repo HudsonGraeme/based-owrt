@@ -49,7 +49,9 @@ async function buildCSS() {
 	}).minify(css);
 
 	await writeFile(join(distDir, 'app.css'), result.styles);
-	console.log(`  custom/app.css -> ${distDir}/app.css (${((1 - result.styles.length / css.length) * 100).toFixed(1)}% smaller)`);
+	console.log(
+		`  custom/app.css -> ${distDir}/app.css (${((1 - result.styles.length / css.length) * 100).toFixed(1)}% smaller)`
+	);
 }
 
 async function copyHTML() {
