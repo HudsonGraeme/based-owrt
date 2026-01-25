@@ -9,6 +9,7 @@ export default class NetworkModule {
 			const tab = subPaths[0] || 'interfaces';
 			this.showSubTab(tab);
 			this.attachSubTabListeners();
+			this.attachActionListeners();
 		});
 	}
 
@@ -21,6 +22,34 @@ export default class NetworkModule {
 				this.core.navigate(`/network/${tab}`);
 			});
 		});
+	}
+
+	attachActionListeners() {
+		const interfacesTable = document.getElementById('interfaces-table');
+		if (!interfacesTable || interfacesTable.hasAttribute('data-actions-listener')) return;
+
+		interfacesTable.setAttribute('data-actions-listener', 'true');
+		interfacesTable.addEventListener('click', (e) => {
+			const button = e.target.closest('[data-action]');
+			if (!button) return;
+
+			const action = button.getAttribute('data-action');
+			const id = button.getAttribute('data-id');
+
+			if (action === 'edit') {
+				this.editInterface(id);
+			} else if (action === 'delete') {
+				this.deleteInterface(id);
+			}
+		});
+	}
+
+	editInterface(id) {
+		console.log('Edit interface:', id);
+	}
+
+	deleteInterface(id) {
+		console.log('Delete interface:', id);
 	}
 
 	showSubTab(tab) {
@@ -71,7 +100,7 @@ export default class NetworkModule {
 						<td>${ipv4}</td>
 						<td>${iface.device || 'N/A'}</td>
 						<td>${statusBadge}</td>
-						<td>${this.core.renderActionButtons('editInterface', 'deleteInterface', iface.interface)}</td>
+						<td>${this.core.renderActionButtons(iface.interface)}</td>
 					</tr>
 				`;
 			}).join('');

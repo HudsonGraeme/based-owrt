@@ -47,7 +47,7 @@ export class OpenWrtCore {
 		document.querySelectorAll('[data-feature]').forEach(element => {
 			const feature = element.getAttribute('data-feature');
 			if (!this.isFeatureEnabled(feature)) {
-				element.style.display = 'none';
+				element.classList.add('hidden');
 			}
 		});
 	}
@@ -61,21 +61,15 @@ export class OpenWrtCore {
 				this.applyFeatureFlags();
 				this.showMainView();
 				this.startApplication();
-			} else {
-				const savedCreds = this.getSavedCredentials();
-				if (savedCreds) {
-					await this.autoLogin(savedCreds.username, savedCreds.password);
-				} else {
-					this.showLoginView();
-				}
+				return;
 			}
+		}
+
+		const savedCreds = this.getSavedCredentials();
+		if (savedCreds) {
+			await this.autoLogin(savedCreds.username, savedCreds.password);
 		} else {
-			const savedCreds = this.getSavedCredentials();
-			if (savedCreds) {
-				await this.autoLogin(savedCreds.username, savedCreds.password);
-			} else {
-				this.showLoginView();
-			}
+			this.showLoginView();
 		}
 	}
 
@@ -92,7 +86,7 @@ export class OpenWrtCore {
 				this.features = this.getDefaultFeatures();
 			}
 		} catch (err) {
-			console.log('Feature config not found, using defaults');
+			console.error('Feature config not found, using defaults:', err);
 			this.features = this.getDefaultFeatures();
 		}
 	}
@@ -198,15 +192,14 @@ export class OpenWrtCore {
 	getSavedCredentials() {
 		try {
 			const saved = localStorage.getItem('saved_credentials');
-			return saved ? JSON.parse(atob(saved)) : null;
+			return saved ? JSON.parse(saved) : null;
 		} catch {
 			return null;
 		}
 	}
 
 	saveCredentials(username, password) {
-		const creds = btoa(JSON.stringify({ username, password }));
-		localStorage.setItem('saved_credentials', creds);
+		localStorage.setItem('saved_credentials', JSON.stringify({ username, password }));
 	}
 
 	clearSavedCredentials() {
@@ -276,7 +269,6 @@ export class OpenWrtCore {
 		localStorage.removeItem('ubus_session');
 		this.clearSavedCredentials();
 		this.sessionId = null;
-		window.location.hash = '';
 		this.showLoginView();
 	}
 
@@ -389,13 +381,13 @@ export class OpenWrtCore {
 		return condition ? this.renderBadge('success', trueText) : this.renderBadge('error', falseText);
 	}
 
-	renderActionButtons(editFn, deleteFn, id) {
+	renderActionButtons(id) {
 		return `
 			<div class="action-buttons">
-				<button class="btn-icon btn-edit" onclick="${editFn}('${id}')">
+				<button class="btn-icon btn-edit" data-action="edit" data-id="${this.escapeHtml(id)}">
 					<svg viewBox="0 0 20 20" fill="currentColor"><path d="M13.586 3.586a2 2 0 112.828 2.828l-.793.793-2.828-2.828.793-.793zM11.379 5.793L3 14.172V17h2.828l8.38-8.379-2.83-2.828z"/></svg>
 				</button>
-				<button class="btn-icon btn-delete" onclick="${deleteFn}('${id}')">
+				<button class="btn-icon btn-delete" data-action="delete" data-id="${this.escapeHtml(id)}">
 					<svg viewBox="0 0 20 20" fill="currentColor"><path fill-rule="evenodd" d="M9 2a1 1 0 00-.894.553L7.382 4H4a1 1 0 000 2v10a2 2 0 002 2h8a2 2 0 002-2V6a1 1 0 100-2h-3.382l-.724-1.447A1 1 0 0011 2H9zM7 8a1 1 0 012 0v6a1 1 0 11-2 0V8zm5-1a1 1 0 00-1 1v6a1 1 0 102 0V8a1 1 0 00-1-1z" clip-rule="evenodd"/></svg>
 				</button>
 			</div>
