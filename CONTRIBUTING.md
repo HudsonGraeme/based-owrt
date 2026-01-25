@@ -33,17 +33,15 @@ pnpm dev:physical 192.168.1.35
 
 ```
 custom/
-├── index.html    (14KB) - UI structure + modals
-├── app.js        (53KB) - App logic + API calls
-└── app.css       (13KB) - Dark glassmorphic theme
+├── index.html - UI structure + modals
+├── app.js     - App logic + API calls
+└── app.css    - Dark glassmorphic theme
 
 scripts/
 ├── watch.js           - Auto-deploy on file changes
 ├── setup-qemu.sh      - Download OpenWrt image
 ├── start-vm.sh        - Start QEMU VM
 └── quick-start.sh     - Automated setup
-
-Total bundle: 80KB → 10KB gzipped
 ```
 
 ### Key Patterns
@@ -339,13 +337,11 @@ gzip -c custom/app.js | wc -c
 gzip -c custom/app.css | wc -c
 ```
 
-Target: <10KB gzipped total
-
 ### Router Impact
 
 - CPU: Negligible (client-side rendering)
 - RAM: ~1MB (serving static files)
-- Storage: 80KB (3 files)
+- Storage: 80KB
 
 ---
 

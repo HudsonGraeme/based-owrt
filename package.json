@@ -1,8 +1,8 @@
 {
 	"name": "based-owrt",
-	"version": "1.0.0",
+	"version": "0.1.0",
 	"type": "module",
-	"description": "Modern management interface for OpenWrt routers (44KB / 10KB gzipped)",
+	"description": "Modern management interface for OpenWrt routers",
 	"keywords": [
 		"openwrt",
 		"ubus",

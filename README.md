@@ -5,8 +5,6 @@
 **Modern OpenWrt Management Interface**
 
 [![License: MIT](https://img.shields.io/badge/License-MIT-blue.svg)](https://opensource.org/licenses/MIT)
-![Size](https://img.shields.io/badge/size-10KB%20gzipped-green)
-![Dependencies](https://img.shields.io/badge/dependencies-0-brightgreen)
 
 [Demo](https://hudsongraeme.github.io/based-owrt/) • [Install](#installation) • [Features](#features)
 
@@ -19,8 +17,6 @@
 ## What is this?
 
 A complete standalone web interface for OpenWrt routers. Not a LuCI theme—pure vanilla JavaScript SPA using OpenWrt's native ubus API.
-
-**10KB gzipped. Zero dependencies. Three files.**
 
 ```bash
 scp -r custom/* root@192.168.1.1:/www/custom/
@@ -75,10 +71,27 @@ scp -r custom/* root@192.168.1.1:/www/custom/
 
 ## Installation
 
+### Option 1: Package (Recommended)
+
+Download the ipk for your architecture from [Releases](https://github.com/HudsonGraeme/based-owrt/releases/latest):
+
+```bash
+wget https://github.com/HudsonGraeme/based-owrt/releases/latest/download/based-ui_VERSION_ARCH.ipk
+opkg install based-ui_VERSION_ARCH.ipk
+```
+
+Available architectures: x86_64, ramips/mt7621, ath79, mediatek/filogic, bcm27xx, ipq40xx, mvebu, ipq806x
+
+Replace `VERSION_ARCH` with your specific file from the releases page.
+
+### Option 2: Manual Install
+
 **Quick start:**
 
 ```bash
 scp -r custom/* root@192.168.1.1:/www/custom/
+scp rpcd-acl.json root@192.168.1.1:/usr/share/rpcd/acl.d/based-openwrt.json
+ssh root@192.168.1.1 "/etc/init.d/rpcd restart"
 ```
 
 **First time setup** (if you get 404):
@@ -90,18 +103,27 @@ uci commit uhttpd
 /etc/init.d/uhttpd restart
 ```
 
-**Configure permissions** (required for full dashboard functionality):
-
-```bash
-scp rpcd-acl.json root@192.168.1.1:/usr/share/rpcd/acl.d/based-openwrt.json
-ssh root@192.168.1.1 "/etc/init.d/rpcd restart"
-```
-
-This grants read-only permissions for:
+**What the ACL grants:**
 - WAN/LAN status display on dashboard
+- Bandwidth monitoring
+- Device count
 - Package list viewing in Software tab
 
 Access at `http://192.168.1.1/custom/` and login with your root credentials.
+
+---
+
+## Building from Source
+
+To build the ipk package yourself:
+
+```bash
+# In OpenWrt buildroot
+git clone https://github.com/HudsonGraeme/based-owrt.git package/based-ui
+make package/based-ui/compile
+```
+
+The package will be in `bin/packages/*/base/based-ui_*.ipk`
 
 ---
 
@@ -134,9 +156,9 @@ pnpm dev:physical 192.168.1.1
 
 ```
 custom/
-├── index.hKB) - Application shell
-├── app.    B) - Features & logic
-└── app.css B) - Stylingd
+├── index.html - Application shell
+├── app.js     - Features & logic
+└── app.css    - Styling
 ```
 
 **Adding features:**
