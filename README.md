@@ -71,7 +71,9 @@ scp -r custom/* root@192.168.1.1:/www/custom/
 
 ## Installation
 
-### Option 1: Package (Recommended)
+### Option 1: IPK Package (Recommended)
+
+The recommended approach—hosts the interface on your router, accessible from any device with a browser.
 
 Download the ipk for your architecture from [Releases](https://github.com/HudsonGraeme/based-owrt/releases/latest):
 
@@ -111,6 +113,32 @@ uci commit uhttpd
 
 Access at `http://192.168.1.1/custom/` and login with your root credentials.
 
+### Option 3: Desktop App (Alternative)
+
+For users who prefer not to install packages on their router, standalone desktop applications are available. The app serves the frontend locally and connects to your router's ubus API over the network.
+
+**Limitations:**
+- Requires a supported OS (macOS, Windows, Ubuntu)—won't work on Chromebooks, Android tablets, other Linux distros, etc.
+- Must be installed on each admin device
+- Requires network connectivity to the router
+- No custom ACLs—some dashboard features (WAN/LAN status, bandwidth stats, device count) require the [ACL file](#option-2-manual-install) installed on-router
+
+**When to use this:**
+- You don't want to install anything on your router
+- You prefer managing updates via desktop app rather than opkg
+- You're testing before committing to on-router installation
+
+Download for your platform from [Releases](https://github.com/HudsonGraeme/based-owrt/releases/latest):
+
+- **macOS**: `.dmg` (Intel & Apple Silicon)
+- **Windows**: `.exe` installer
+- **Linux**: `.AppImage` or `.deb` (Ubuntu 22.04+)
+
+**Setup:**
+1. Download and install the app
+2. Open Preferences (⌘, on macOS) and enter your router IP
+3. Login with your router's root password
+
 ---
 
 ## Building from Source
@@ -142,7 +170,7 @@ All operations validated server-side. No privilege escalation paths.
 
 ## Development
 
-**Auto-deploy on save:**
+**Web development (router-based):**
 
 ```bash
 # QEMU VM
@@ -150,6 +178,16 @@ pnpm dev
 
 # Physical router
 pnpm dev:physical 192.168.1.1
+```
+
+**Desktop app development:**
+
+```bash
+# Run desktop app in dev mode
+pnpm tauri:dev
+
+# Build desktop app
+pnpm tauri:build
 ```
 
 **Project structure:**

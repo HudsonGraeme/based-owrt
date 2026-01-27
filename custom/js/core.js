@@ -1,10 +1,17 @@
 export class OpenWrtCore {
 	constructor() {
 		this.sessionId = localStorage.getItem('ubus_session');
+		this.routerIP = localStorage.getItem('router_ip') || null;
 		this.features = {};
 		this.modules = new Map();
 		this.routes = new Map();
 		this.currentRoute = null;
+		this.isTauri =
+			window.__TAURI_INTERNALS__ !== undefined && typeof window.__TAURI_INTERNALS__.invoke === 'function';
+
+		if (this.isTauri) {
+			console.log('[Tauri] Running in Tauri environment, HTTP plugin will bypass CORS');
+		}
 	}
 
 	registerRoute(path, handler) {
@@ -78,6 +85,11 @@ export class OpenWrtCore {
 	}
 
 	async init() {
+		if (this.isTauri && !this.routerIP) {
+			this.showNeedsSetup();
+			return;
+		}
+
 		if (this.sessionId) {
 			const valid = await this.validateSession();
 			if (valid) {
@@ -341,19 +353,43 @@ export class OpenWrtCore {
 		document.getElementById('main-view').classList.remove('hidden');
 	}
 
+	changeRouter() {
+		this.stopPolling();
+		localStorage.removeItem('router_ip');
+		localStorage.removeItem('ubus_session');
+		this.clearSavedCredentials();
+		this.routerIP = null;
+		this.sessionId = null;
+		document.getElementById('main-view').classList.add('hidden');
+		this.showNeedsSetup();
+	}
+
 	async ubusCall(object, method, params = {}) {
-		const response = await fetch('/ubus', {
-			method: 'POST',
-			headers: { 'Content-Type': 'application/json' },
-			body: JSON.stringify({
-				jsonrpc: '2.0',
-				id: Math.random(),
-				method: 'call',
-				params: [this.sessionId || '00000000000000000000000000000000', object, method, params]
-			})
+		const baseUrl = this.routerIP ? `http://${this.routerIP}` : '';
+		const url = `${baseUrl}/ubus`;
+		const body = JSON.stringify({
+			jsonrpc: '2.0',
+			id: Math.random(),
+			method: 'call',
+			params: [this.sessionId || '00000000000000000000000000000000', object, method, params]
 		});
 
-		const data = await response.json();
+		let data;
+		if (this.isTauri) {
+			const result = await window.__TAURI_INTERNALS__.invoke('http_post', { url, body });
+			if (result.status < 200 || result.status >= 300) {
+				throw new Error(`HTTP ${result.status}`);
+			}
+			data = JSON.parse(result.data);
+		} else {
+			const response = await fetch(url, {
+				method: 'POST',
+				headers: { 'Content-Type': 'application/json' },
+				body: body
+			});
+			data = await response.json();
+		}
+
 		if (data.error) throw new Error(data.error.message || 'ubus call failed');
 		return data.result;
 	}
@@ -480,6 +516,12 @@ export class OpenWrtCore {
 		if (mbps < 0.01) return '0 Mbps';
 		if (mbps < 1) return `${mbps.toFixed(2)} Mbps`;
 		return `${mbps.toFixed(1)} Mbps`;
+	}
+
+	showNeedsSetup() {
+		document.getElementById('login-view')?.classList.add('hidden');
+		document.getElementById('main-view')?.classList.add('hidden');
+		document.getElementById('setup-prompt-view')?.classList.remove('hidden');
 	}
 
 	escapeHtml(text) {

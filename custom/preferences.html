@@ -1,0 +1,487 @@
+<!doctype html>
+<html lang="en">
+	<head>
+		<meta charset="UTF-8" />
+		<meta name="viewport" content="width=device-width, initial-scale=1.0" />
+		<title>Preferences</title>
+		<style>
+			:root {
+				--bg: #0a0a0b;
+				--card-bg: rgba(20, 20, 22, 0.95);
+				--border: rgba(255, 255, 255, 0.08);
+				--text: #e2e2e5;
+				--muted: #71717a;
+				--accent: #e2e2e5;
+				--danger: #ef4444;
+				--success: #4ade80;
+				--warning: #fbbf24;
+			}
+
+			* {
+				margin: 0;
+				padding: 0;
+				box-sizing: border-box;
+			}
+
+			body {
+				font-family: 'SF Mono', 'Monaco', 'Inconsolata', 'Roboto Mono', monospace;
+				background: var(--bg);
+				color: var(--text);
+				font-size: 13px;
+				-webkit-font-smoothing: antialiased;
+			}
+
+			.titlebar {
+				height: 28px;
+				background: rgba(30, 30, 32, 0.9);
+				border-bottom: 1px solid var(--border);
+				display: flex;
+				align-items: center;
+				justify-content: center;
+				-webkit-app-region: drag;
+				user-select: none;
+			}
+
+			.titlebar-title {
+				font-size: 12px;
+				font-weight: 500;
+				color: var(--muted);
+			}
+
+			.content {
+				padding: 24px;
+			}
+
+			.section {
+				background: var(--card-bg);
+				border: 1px solid var(--border);
+				border-radius: 8px;
+				padding: 16px;
+				margin-bottom: 16px;
+			}
+
+			.section-title {
+				font-size: 11px;
+				font-weight: 600;
+				letter-spacing: 0.5px;
+				color: var(--muted);
+				margin-bottom: 12px;
+				text-transform: uppercase;
+			}
+
+			.setting-row {
+				display: flex;
+				justify-content: space-between;
+				align-items: center;
+				padding: 8px 0;
+			}
+
+			.setting-row + .setting-row {
+				border-top: 1px solid var(--border);
+			}
+
+			.setting-label {
+				color: var(--text);
+			}
+
+			.setting-value {
+				color: var(--accent);
+				font-weight: 600;
+			}
+
+			.setting-value.not-set {
+				color: var(--muted);
+				font-style: italic;
+			}
+
+			.btn {
+				padding: 8px 16px;
+				border: 1px solid var(--border);
+				border-radius: 4px;
+				background: transparent;
+				color: var(--text);
+				font-family: inherit;
+				font-size: 12px;
+				cursor: pointer;
+				transition: all 0.2s;
+			}
+
+			.btn:hover {
+				border-color: var(--accent);
+				background: rgba(255, 255, 255, 0.05);
+			}
+
+			.btn:disabled {
+				opacity: 0.5;
+				cursor: not-allowed;
+			}
+
+			.btn-danger {
+				border-color: var(--danger);
+				color: var(--danger);
+			}
+
+			.btn-danger:hover {
+				background: rgba(239, 68, 68, 0.1);
+			}
+
+			.btn-row {
+				display: flex;
+				gap: 8px;
+				margin-top: 12px;
+			}
+
+			.form-input {
+				width: 100%;
+				padding: 10px 12px;
+				background: rgba(0, 0, 0, 0.3);
+				border: 1px solid var(--border);
+				border-radius: 4px;
+				color: var(--text);
+				font-family: inherit;
+				font-size: 13px;
+				margin-bottom: 12px;
+			}
+
+			.form-input:focus {
+				outline: none;
+				border-color: var(--accent);
+			}
+
+			.status-indicator {
+				display: inline-block;
+				width: 8px;
+				height: 8px;
+				border-radius: 50%;
+				margin-right: 8px;
+			}
+
+			.status-indicator.connected {
+				background: var(--success);
+			}
+
+			.status-indicator.disconnected {
+				background: var(--danger);
+			}
+
+			.status-message {
+				font-size: 12px;
+				margin-top: 8px;
+				padding: 8px;
+				border-radius: 4px;
+			}
+
+			.status-message.error {
+				background: rgba(239, 68, 68, 0.1);
+				color: var(--danger);
+			}
+
+			.status-message.success {
+				background: rgba(74, 222, 128, 0.1);
+				color: var(--success);
+			}
+
+			.status-message.warning {
+				background: rgba(251, 191, 36, 0.1);
+				color: var(--warning);
+			}
+
+			.hidden {
+				display: none !important;
+			}
+
+			.devices-list {
+				margin-bottom: 12px;
+				max-height: 150px;
+				overflow-y: auto;
+				border: 1px solid var(--border);
+				border-radius: 4px;
+			}
+
+			.device-item {
+				display: flex;
+				justify-content: space-between;
+				padding: 8px 12px;
+				cursor: pointer;
+				transition: background 0.2s;
+			}
+
+			.device-item:hover {
+				background: rgba(255, 255, 255, 0.05);
+			}
+
+			.device-item + .device-item {
+				border-top: 1px solid var(--border);
+			}
+
+			.device-ip {
+				font-weight: 600;
+			}
+
+			.device-mac {
+				color: var(--muted);
+				font-size: 11px;
+			}
+
+			.scanning {
+				padding: 12px;
+				text-align: center;
+				color: var(--muted);
+			}
+		</style>
+	</head>
+	<body>
+		<div class="titlebar" data-tauri-drag-region>
+			<span class="titlebar-title">Preferences</span>
+		</div>
+
+		<div class="content">
+			<div class="section">
+				<div class="section-title">Connection</div>
+				<div class="setting-row">
+					<span class="setting-label">
+						<span class="status-indicator" id="connection-status"></span>
+						Router IP
+					</span>
+					<span class="setting-value" id="router-ip-display">Not configured</span>
+				</div>
+				<div class="setting-row">
+					<span class="setting-label">Session</span>
+					<span class="setting-value" id="session-status">Not logged in</span>
+				</div>
+			</div>
+
+			<div class="section" id="router-config-section">
+				<div class="section-title">Router Configuration</div>
+				<input
+					type="text"
+					class="form-input"
+					id="router-ip-input"
+					placeholder="Enter router IP (e.g., 192.168.1.1)"
+				/>
+				<div id="devices-list" class="devices-list hidden"></div>
+				<div id="status-message" class="status-message hidden"></div>
+				<div class="btn-row">
+					<button class="btn" id="scan-btn">Scan Network</button>
+					<button class="btn" id="test-connection-btn">Test Connection</button>
+					<button class="btn" id="save-router-btn" disabled>Save & Connect</button>
+				</div>
+			</div>
+
+			<div class="section">
+				<div class="section-title">Actions</div>
+				<div class="btn-row">
+					<button class="btn btn-danger" id="logout-btn">Logout</button>
+					<button class="btn btn-danger" id="clear-all-btn">Clear All Data</button>
+				</div>
+			</div>
+		</div>
+
+		<script>
+			let connectionTested = false;
+
+			function updateDisplay() {
+				const routerIP = localStorage.getItem('router_ip');
+				const sessionId = localStorage.getItem('ubus_session');
+
+				const routerDisplay = document.getElementById('router-ip-display');
+				const sessionStatus = document.getElementById('session-status');
+				const connectionStatus = document.getElementById('connection-status');
+				const routerInput = document.getElementById('router-ip-input');
+
+				if (routerIP) {
+					routerDisplay.textContent = routerIP;
+					routerDisplay.classList.remove('not-set');
+					connectionStatus.classList.add('connected');
+					connectionStatus.classList.remove('disconnected');
+					routerInput.value = routerIP;
+				} else {
+					routerDisplay.textContent = 'Not configured';
+					routerDisplay.classList.add('not-set');
+					connectionStatus.classList.add('disconnected');
+					connectionStatus.classList.remove('connected');
+				}
+
+				if (sessionId) {
+					sessionStatus.textContent = 'Active';
+					sessionStatus.classList.remove('not-set');
+				} else {
+					sessionStatus.textContent = 'Not logged in';
+					sessionStatus.classList.add('not-set');
+				}
+			}
+
+			function showStatus(message, type) {
+				const el = document.getElementById('status-message');
+				el.textContent = message;
+				el.className = `status-message ${type}`;
+				el.classList.remove('hidden');
+			}
+
+			function hideStatus() {
+				document.getElementById('status-message').classList.add('hidden');
+			}
+
+			async function testConnection(ip) {
+				const url = `http://${ip}/ubus`;
+				const body = JSON.stringify({
+					jsonrpc: '2.0',
+					id: 1,
+					method: 'call',
+					params: ['00000000000000000000000000000000', 'session', 'login', {}]
+				});
+
+				if (window.__TAURI_INTERNALS__) {
+					const result = await window.__TAURI_INTERNALS__.invoke('http_post', { url, body });
+					return result.status >= 200 && result.status < 300;
+				} else {
+					const response = await fetch(url, {
+						method: 'POST',
+						headers: { 'Content-Type': 'application/json' },
+						body: body,
+						signal: AbortSignal.timeout(5000)
+					});
+					return response.ok;
+				}
+			}
+
+			async function notifyMainWindow() {
+				if (window.__TAURI_INTERNALS__) {
+					try {
+						await window.__TAURI_INTERNALS__.invoke('plugin:webview|eval', {
+							label: 'main',
+							script: 'window.location.reload()'
+						});
+					} catch (e) {
+						console.log('Could not notify main window:', e);
+					}
+				}
+			}
+
+			updateDisplay();
+
+			async function scanNetwork() {
+				const list = document.getElementById('devices-list');
+				list.classList.remove('hidden');
+				list.innerHTML = '<div class="scanning">Scanning network...</div>';
+
+				try {
+					if (window.__TAURI_INTERNALS__) {
+						const devices = await window.__TAURI_INTERNALS__.invoke('scan_network');
+						if (devices && devices.length > 0) {
+							list.innerHTML = devices
+								.map(
+									d => `
+								<div class="device-item" data-ip="${d.ip}">
+									<span class="device-ip">${d.ip}</span>
+									<span class="device-mac">${d.mac || 'Unknown'}</span>
+								</div>
+							`
+								)
+								.join('');
+							list.querySelectorAll('.device-item').forEach(el => {
+								el.addEventListener('click', () => {
+									document.getElementById('router-ip-input').value = el.dataset.ip;
+									connectionTested = false;
+									document.getElementById('save-router-btn').disabled = true;
+									hideStatus();
+								});
+							});
+						} else {
+							list.innerHTML = '<div class="scanning">No devices found</div>';
+						}
+					} else {
+						list.classList.add('hidden');
+					}
+				} catch (e) {
+					list.innerHTML = '<div class="scanning">Scan failed: ' + e.message + '</div>';
+				}
+			}
+
+			if (window.__TAURI_INTERNALS__) {
+				scanNetwork();
+			}
+
+			document.getElementById('scan-btn').addEventListener('click', scanNetwork);
+
+			document.getElementById('test-connection-btn').addEventListener('click', async () => {
+				const ip = document.getElementById('router-ip-input').value.trim();
+				if (!ip) {
+					showStatus('Please enter an IP address', 'error');
+					return;
+				}
+
+				const btn = document.getElementById('test-connection-btn');
+				btn.disabled = true;
+				btn.textContent = 'Testing...';
+				showStatus('Connecting...', 'warning');
+
+				try {
+					const ok = await testConnection(ip);
+					if (ok) {
+						showStatus('Connection successful', 'success');
+						connectionTested = true;
+						document.getElementById('save-router-btn').disabled = false;
+					} else {
+						showStatus('Connection failed - router not responding', 'error');
+						connectionTested = false;
+						document.getElementById('save-router-btn').disabled = true;
+					}
+				} catch (e) {
+					showStatus('Connection failed: ' + e.message, 'error');
+					connectionTested = false;
+					document.getElementById('save-router-btn').disabled = true;
+				}
+
+				btn.disabled = false;
+				btn.textContent = 'Test Connection';
+			});
+
+			document.getElementById('save-router-btn').addEventListener('click', async () => {
+				const ip = document.getElementById('router-ip-input').value.trim();
+				if (!ip || !connectionTested) return;
+
+				localStorage.removeItem('ubus_session');
+				localStorage.removeItem('saved_credentials');
+				localStorage.setItem('router_ip', ip);
+
+				showStatus('Saved! Reloading...', 'success');
+				updateDisplay();
+
+				await notifyMainWindow();
+
+				setTimeout(() => {
+					if (window.__TAURI_INTERNALS__) {
+						window.__TAURI_INTERNALS__.invoke('plugin:window|close', { label: 'preferences' });
+					}
+				}, 500);
+			});
+
+			document.getElementById('router-ip-input').addEventListener('input', () => {
+				connectionTested = false;
+				document.getElementById('save-router-btn').disabled = true;
+				hideStatus();
+			});
+
+			document.getElementById('logout-btn').addEventListener('click', async () => {
+				localStorage.removeItem('ubus_session');
+				localStorage.removeItem('saved_credentials');
+				updateDisplay();
+				showStatus('Logged out', 'success');
+				await notifyMainWindow();
+			});
+
+			document.getElementById('clear-all-btn').addEventListener('click', async () => {
+				if (confirm('This will clear all saved data including router IP and credentials. Continue?')) {
+					localStorage.removeItem('ubus_session');
+					localStorage.removeItem('saved_credentials');
+					localStorage.removeItem('router_ip');
+					updateDisplay();
+					showStatus('All data cleared', 'success');
+					document.getElementById('router-ip-input').value = '';
+					await notifyMainWindow();
+				}
+			});
+		</script>
+	</body>
+</html>

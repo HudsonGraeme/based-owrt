@@ -13,6 +13,33 @@
 	</head>
 	<body>
 		<div id="app">
+			<div id="setup-prompt-view" class="view hidden">
+				<div class="login-card">
+					<h1>ROUTER SETUP</h1>
+					<p style="color: var(--steel-text); margin-bottom: 20px; text-align: center">
+						No router configured
+					</p>
+					<p style="color: var(--steel-muted); font-size: 13px; text-align: center; line-height: 1.6">
+						Open <strong>Preferences</strong> from the menu bar<br />or press
+						<kbd
+							id="prefs-shortcut"
+							style="
+								background: rgba(255, 255, 255, 0.1);
+								padding: 2px 6px;
+								border-radius: 3px;
+								font-family: inherit;
+							"
+							>Ctrl+,</kbd
+						>
+						to configure your router.
+					</p>
+					<script>
+						if (navigator.platform.includes('Mac'))
+							document.getElementById('prefs-shortcut').textContent = '⌘,';
+					</script>
+				</div>
+			</div>
+
 			<div id="login-view" class="view">
 				<div class="login-card">
 					<h1>OPENWRT</h1>
@@ -31,7 +58,7 @@
 			</div>
 
 			<div id="main-view" class="view hidden">
-				<header class="header">
+				<header class="header" data-tauri-drag-region>
 					<div class="logo">
 						<svg width="24" height="24" viewBox="480 290 660 500" class="logo-icon">
 							<path

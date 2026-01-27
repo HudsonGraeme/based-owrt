@@ -1,0 +1,46 @@
+{
+  "$schema": "../node_modules/@tauri-apps/cli/config.schema.json",
+  "productName": "Based Router Manager",
+  "version": "0.1.0",
+  "identifier": "com.hudsongraeme.based",
+  "build": {
+    "frontendDist": "../custom",
+    "beforeDevCommand": "",
+    "beforeBuildCommand": "node scripts/build.js"
+  },
+  "app": {
+    "windows": [
+      {
+        "title": "Based Router Manager",
+        "width": 1200,
+        "height": 800,
+        "minWidth": 800,
+        "minHeight": 600,
+        "resizable": true,
+        "fullscreen": false,
+        "titleBarStyle": "Transparent",
+        "hiddenTitle": true
+      }
+    ],
+    "security": {
+      "csp": "default-src 'self'; script-src 'self'; style-src 'self' 'unsafe-inline'; img-src 'self' data:; connect-src 'self'",
+      "devCsp": "default-src 'self'; script-src 'self' 'unsafe-inline'; style-src 'self' 'unsafe-inline'; img-src 'self' data: http://192.168.* http://10.* http://172.16.*; connect-src 'self' http://192.168.* http://10.* http://172.16.*"
+    },
+    "macOSPrivateApi": true
+  },
+  "bundle": {
+    "active": true,
+    "targets": "all",
+    "icon": [
+      "icons/32x32.png",
+      "icons/128x128.png",
+      "icons/128x128@2x.png",
+      "icons/icon.icns",
+      "icons/icon.ico"
+    ],
+    "publisher": "HudsonGraeme",
+    "copyright": "Copyright (c) 2026 HudsonGraeme",
+    "shortDescription": "Modern OpenWrt router management interface",
+    "longDescription": "Based Router Manager provides a modern web interface for managing OpenWrt routers via the native ubus API."
+  }
+}
