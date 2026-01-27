@@ -73,7 +73,8 @@ body {
 	min-height: 100vh;
 }
 
-#login-view {
+#login-view,
+#setup-prompt-view {
 	display: flex;
 	align-items: center;
 	justify-content: center;
@@ -136,6 +137,73 @@ body {
 	background: var(--starship-steel);
 	color: var(--space-black);
 	box-shadow: 0 0 20px rgba(255, 255, 255, 0.3);
+}
+
+.login-card .btn-secondary {
+	background: transparent;
+	border: 1px solid rgba(255, 255, 255, 0.3);
+	color: var(--steel-text);
+}
+
+.login-card .btn-secondary:hover:not(:disabled) {
+	background: rgba(255, 255, 255, 0.05);
+	border-color: var(--starship-steel);
+	color: var(--starship-steel);
+	box-shadow: 0 0 10px rgba(255, 255, 255, 0.1);
+}
+
+.login-card .btn-secondary:disabled {
+	opacity: 0.5;
+	cursor: not-allowed;
+}
+
+.device-list-header {
+	color: var(--steel-text);
+	font-size: 14px;
+	margin-bottom: 10px;
+	font-family: var(--font-mono);
+}
+
+.device-list {
+	display: flex;
+	flex-direction: column;
+	gap: 8px;
+	max-height: 200px;
+	overflow-y: auto;
+}
+
+.network-device {
+	background: rgba(255, 255, 255, 0.05);
+	border: 1px solid rgba(255, 255, 255, 0.1);
+	border-radius: 4px;
+	padding: 12px;
+	cursor: pointer;
+	transition: all 0.2s;
+}
+
+.network-device:hover {
+	background: rgba(255, 255, 255, 0.1);
+	border-color: rgba(255, 255, 255, 0.2);
+}
+
+.network-device.selected {
+	background: rgba(226, 226, 229, 0.1);
+	border-color: var(--starship-steel);
+	box-shadow: 0 0 10px rgba(226, 226, 229, 0.2);
+}
+
+.device-ip {
+	color: var(--starship-steel);
+	font-size: 16px;
+	font-weight: bold;
+	font-family: var(--font-mono);
+}
+
+.device-mac {
+	color: var(--steel-muted);
+	font-size: 12px;
+	margin-top: 4px;
+	font-family: var(--font-mono);
 }
 
 .error {

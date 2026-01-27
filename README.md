@@ -71,25 +71,9 @@ scp -r custom/* root@192.168.1.1:/www/custom/
 
 ## Installation
 
-### Option 1: Desktop App (Zero Router Setup)
+### Option 1: IPK Package (Recommended)
 
-Download for your platform from [Releases](https://github.com/HudsonGraeme/based-owrt/releases/latest):
-
-- **macOS**: `.dmg` (Intel & Apple Silicon)
-- **Windows**: `.exe` installer
-- **Linux**: `.AppImage` or `.deb`
-
-**No installation on router required.** The desktop app connects directly to your router's ubus API over your local network.
-
-1. Download and install the app
-2. Launch "Based Router Manager"
-3. Enter your router IP (e.g., `192.168.1.1`)
-4. Login with root credentials
-5. Done
-
-Works with any stock OpenWrt router. No packages to install, no SSH required.
-
-### Option 2: IPK Package (On-Router Install)
+The recommended approach—hosts the interface on your router, accessible from any device with a browser.
 
 Download the ipk for your architecture from [Releases](https://github.com/HudsonGraeme/based-owrt/releases/latest):
 
@@ -102,7 +86,7 @@ Available architectures: x86_64, ramips/mt7621, ath79, mediatek/filogic, bcm27xx
 
 Replace `VERSION_ARCH` with your specific file from the releases page.
 
-### Option 3: Manual Install
+### Option 2: Manual Install
 
 **Quick start:**
 
@@ -128,6 +112,32 @@ uci commit uhttpd
 - Package list viewing in Software tab
 
 Access at `http://192.168.1.1/custom/` and login with your root credentials.
+
+### Option 3: Desktop App (Alternative)
+
+For users who prefer not to install packages on their router, standalone desktop applications are available. The app serves the frontend locally and connects to your router's ubus API over the network.
+
+**Limitations:**
+- Requires a supported OS (macOS, Windows, Ubuntu)—won't work on Chromebooks, Android tablets, other Linux distros, etc.
+- Must be installed on each admin device
+- Requires network connectivity to the router
+- No custom ACLs—some dashboard features (WAN/LAN status, bandwidth stats, device count) require the [ACL file](#option-2-manual-install) installed on-router
+
+**When to use this:**
+- You don't want to install anything on your router
+- You prefer managing updates via desktop app rather than opkg
+- You're testing before committing to on-router installation
+
+Download for your platform from [Releases](https://github.com/HudsonGraeme/based-owrt/releases/latest):
+
+- **macOS**: `.dmg` (Intel & Apple Silicon)
+- **Windows**: `.exe` installer
+- **Linux**: `.AppImage` or `.deb` (Ubuntu 22.04+)
+
+**Setup:**
+1. Download and install the app
+2. Open Preferences (⌘, on macOS) and enter your router IP
+3. Login with your router's root password
 
 ---
 
