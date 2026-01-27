@@ -1,3 +1,4 @@
+use std::net::Ipv4Addr;
 use std::process::Command;
 use serde::{Deserialize, Serialize};
 use tauri::{
@@ -19,15 +20,10 @@ struct HttpResponse {
 
 #[tauri::command]
 async fn scan_network() -> Result<Vec<NetworkDevice>, String> {
-    let output = if cfg!(target_os = "windows") {
-        Command::new("arp")
-            .arg("-a")
-            .output()
-    } else {
-        Command::new("arp")
-            .arg("-a")
-            .output()
-    }.map_err(|e| format!("Failed to execute arp: {}", e))?;
+    let output = Command::new("arp")
+        .arg("-a")
+        .output()
+        .map_err(|e| format!("Failed to execute arp: {}", e))?;
 
     if !output.status.success() {
         return Err("ARP command failed".to_string());
@@ -51,9 +47,9 @@ async fn scan_network() -> Result<Vec<NetworkDevice>, String> {
     }
 
     devices.sort_by(|a, b| {
-        let a_parts: Vec<u8> = a.ip.split('.').filter_map(|s| s.parse().ok()).collect();
-        let b_parts: Vec<u8> = b.ip.split('.').filter_map(|s| s.parse().ok()).collect();
-        a_parts.cmp(&b_parts)
+        let a_addr = a.ip.parse::<Ipv4Addr>().unwrap_or(Ipv4Addr::UNSPECIFIED);
+        let b_addr = b.ip.parse::<Ipv4Addr>().unwrap_or(Ipv4Addr::UNSPECIFIED);
+        a_addr.cmp(&b_addr)
     });
 
     Ok(devices)
@@ -80,7 +76,7 @@ fn parse_windows_arp_line(line: &str) -> (Option<String>, Option<String>) {
     if parts.len() >= 2 {
         let ip = parts[0].to_string();
         if ip.contains('.') {
-            let mac = if parts.len() >= 2 && parts[1].contains('-') {
+            let mac = if parts[1].contains('-') {
                 Some(parts[1].replace('-', ":"))
             } else {
                 None
@@ -92,12 +88,7 @@ fn parse_windows_arp_line(line: &str) -> (Option<String>, Option<String>) {
 }
 
 fn is_private_ip(ip: &str) -> bool {
-    use std::net::Ipv4Addr;
-    if let Ok(addr) = ip.parse::<Ipv4Addr>() {
-        addr.is_private()
-    } else {
-        false
-    }
+    ip.parse::<Ipv4Addr>().map_or(false, |addr| addr.is_private())
 }
 
 #[tauri::command]
@@ -186,7 +177,7 @@ pub fn run() {
                         WebviewUrl::App("preferences.html".into()),
                     )
                     .title("Preferences")
-                    .inner_size(400.0, 320.0)
+                    .inner_size(400.0, 450.0)
                     .resizable(false)
                     .minimizable(false)
                     .maximizable(false)

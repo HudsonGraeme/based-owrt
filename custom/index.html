@@ -22,16 +22,21 @@
 					<p style="color: var(--steel-muted); font-size: 13px; text-align: center; line-height: 1.6">
 						Open <strong>Preferences</strong> from the menu bar<br />or press
 						<kbd
+							id="prefs-shortcut"
 							style="
 								background: rgba(255, 255, 255, 0.1);
 								padding: 2px 6px;
 								border-radius: 3px;
 								font-family: inherit;
 							"
-							>&#8984;,</kbd
+							>Ctrl+,</kbd
 						>
 						to configure your router.
 					</p>
+					<script>
+						if (navigator.platform.includes('Mac'))
+							document.getElementById('prefs-shortcut').textContent = '⌘,';
+					</script>
 				</div>
 			</div>
 
