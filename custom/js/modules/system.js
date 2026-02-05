@@ -100,7 +100,7 @@ export default class SystemModule {
 			this.subTabs.cleanup();
 			this.subTabs = null;
 		}
-		this.cleanups.forEach(fn => fn?.());
+		this.cleanups.filter(Boolean).forEach(fn => fn());
 		this.cleanups = [];
 	}
 
@@ -147,10 +147,19 @@ export default class SystemModule {
 			this.core.showToast('Passwords do not match', 'error');
 			return;
 		}
+		const forbidden = /[`$"'\\;&|<>(){}[\]\n\r]/;
+		if (forbidden.test(newPw)) {
+			this.core.showToast('Password contains invalid characters', 'error');
+			return;
+		}
 		try {
+			await this.core.ubusCall('file', 'write', {
+				path: '/tmp/.passwd_input',
+				data: `${newPw}\n${newPw}\n`
+			});
 			await this.core.ubusCall('file', 'exec', {
 				command: '/bin/sh',
-				params: ['-c', `echo -e "${newPw}\\n${newPw}" | passwd root`]
+				params: ['-c', 'cat /tmp/.passwd_input | passwd root && rm -f /tmp/.passwd_input']
 			});
 			document.getElementById('new-password').value = '';
 			document.getElementById('confirm-password').value = '';

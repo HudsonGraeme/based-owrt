@@ -610,7 +610,8 @@ export class OpenWrtCore {
 			el.value = el.defaultValue || '';
 		});
 		modal.querySelectorAll('select').forEach(el => {
-			el.selectedIndex = 0;
+			const defaultOpt = [...el.options].findIndex(o => o.defaultSelected);
+			el.selectedIndex = defaultOpt >= 0 ? defaultOpt : 0;
 		});
 		modal.querySelectorAll('input[type="checkbox"]').forEach(el => {
 			el.checked = el.defaultChecked;

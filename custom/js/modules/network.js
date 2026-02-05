@@ -162,7 +162,7 @@ export default class NetworkModule {
 			this.subTabs.cleanup();
 			this.subTabs = null;
 		}
-		this.cleanups.forEach(fn => fn?.());
+		this.cleanups.filter(Boolean).forEach(fn => fn());
 		this.cleanups = [];
 	}
 
@@ -777,16 +777,16 @@ export default class NetworkModule {
 		}
 
 		const lines = this.hostsRaw.split('\n');
-		const dataLines = lines.filter(l => l.trim() && !l.trim().startsWith('#'));
-		const commentLines = lines.filter(l => !l.trim() || l.trim().startsWith('#'));
+		const dataIndices = lines.map((l, i) => (l.trim() && !l.trim().startsWith('#') ? i : -1)).filter(i => i >= 0);
 
 		if (index !== '') {
-			dataLines[parseInt(index)] = `${ip}\t${names}`;
+			const origIdx = dataIndices[parseInt(index)];
+			if (origIdx !== undefined) lines[origIdx] = `${ip}\t${names}`;
 		} else {
-			dataLines.push(`${ip}\t${names}`);
+			lines.push(`${ip}\t${names}`);
 		}
 
-		const newContent = [...commentLines, ...dataLines].join('\n') + '\n';
+		const newContent = lines.join('\n') + (this.hostsRaw.endsWith('\n') ? '' : '\n');
 		try {
 			await this.core.ubusCall('file', 'write', { path: '/etc/hosts', data: newContent });
 			this.core.closeModal('host-entry-modal');
@@ -799,10 +799,11 @@ export default class NetworkModule {
 
 	async deleteHostEntry(index) {
 		if (!confirm('Delete this hosts entry?')) return;
-		const entries = this.parseHosts(this.hostsRaw);
-		entries.splice(parseInt(index), 1);
-		const commentLines = this.hostsRaw.split('\n').filter(l => !l.trim() || l.trim().startsWith('#'));
-		const newContent = [...commentLines, ...entries.map(e => `${e.ip}\t${e.names}`)].join('\n') + '\n';
+		const lines = this.hostsRaw.split('\n');
+		const dataIndices = lines.map((l, i) => (l.trim() && !l.trim().startsWith('#') ? i : -1)).filter(i => i >= 0);
+		const origIdx = dataIndices[parseInt(index)];
+		if (origIdx !== undefined) lines.splice(origIdx, 1);
+		const newContent = lines.join('\n') + (this.hostsRaw.endsWith('\n') ? '' : '\n');
 		try {
 			await this.core.ubusCall('file', 'write', { path: '/etc/hosts', data: newContent });
 			this.core.showToast('Hosts entry deleted', 'success');
@@ -1100,11 +1101,18 @@ export default class NetworkModule {
 			});
 			if (s !== 0 || !r?.stdout) throw new Error('Key generation failed');
 			const privateKey = r.stdout.trim();
+			if (!/^[A-Za-z0-9+/]{43}=$/.test(privateKey)) {
+				throw new Error('Invalid key format');
+			}
 			document.getElementById('wg-private-key').value = privateKey;
 
+			await this.core.ubusCall('file', 'write', {
+				path: '/tmp/.wg_priv.key',
+				data: privateKey + '\n'
+			});
 			const [s2, r2] = await this.core.ubusCall('file', 'exec', {
 				command: '/bin/sh',
-				params: ['-c', `echo "${privateKey}" | /usr/bin/wg pubkey`]
+				params: ['-c', 'cat /tmp/.wg_priv.key | /usr/bin/wg pubkey && rm -f /tmp/.wg_priv.key']
 			});
 			if (s2 === 0 && r2?.stdout) {
 				document.getElementById('wg-public-key').value = r2.stdout.trim();

@@ -14,32 +14,22 @@
 				"/tmp/firmware.bin": ["read"]
 			},
 			"ubus": {
-				"network.interface": ["dump", "up", "down"],
+				"network.interface": ["dump"],
 				"network.wireless": ["status"],
-				"uci": ["get", "set", "add", "delete", "commit"],
-				"file": ["read", "write", "exec"],
-				"system": ["info", "board", "reboot"],
+				"uci": ["get"],
+				"file": ["read"],
+				"system": ["info", "board"],
 				"luci-rpc": ["getDHCPLeases"],
 				"service": ["list"]
 			},
-			"uci": [
-				"based",
-				"network",
-				"wireless",
-				"firewall",
-				"dhcp",
-				"system",
-				"qos",
-				"ddns"
-			]
+			"uci": ["based"]
 		},
 		"write": {
 			"ubus": {
 				"uci": ["set", "add", "delete", "commit"],
 				"file": ["write", "exec"],
 				"system": ["reboot"],
-				"network.interface": ["up", "down"],
-				"service": ["list"]
+				"network.interface": ["up", "down"]
 			},
 			"uci": [
 				"network",
