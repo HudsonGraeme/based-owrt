@@ -162,7 +162,9 @@ export default class NetworkModule {
 			this.subTabs.cleanup();
 			this.subTabs = null;
 		}
-		this.cleanups.filter(Boolean).forEach(fn => fn());
+		this.cleanups.filter(Boolean).forEach(fn => {
+			fn();
+		});
 		this.cleanups = [];
 	}
 
@@ -1112,7 +1114,7 @@ export default class NetworkModule {
 			});
 			const [s2, r2] = await this.core.ubusCall('file', 'exec', {
 				command: '/bin/sh',
-				params: ['-c', 'cat /tmp/.wg_priv.key | /usr/bin/wg pubkey && rm -f /tmp/.wg_priv.key']
+				params: ['-c', 'cat /tmp/.wg_priv.key | /usr/bin/wg pubkey; rm -f /tmp/.wg_priv.key']
 			});
 			if (s2 === 0 && r2?.stdout) {
 				document.getElementById('wg-public-key').value = r2.stdout.trim();

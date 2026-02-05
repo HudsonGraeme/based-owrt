@@ -100,7 +100,9 @@ export default class SystemModule {
 			this.subTabs.cleanup();
 			this.subTabs = null;
 		}
-		this.cleanups.filter(Boolean).forEach(fn => fn());
+		this.cleanups.filter(Boolean).forEach(fn => {
+			fn();
+		});
 		this.cleanups = [];
 	}
 
@@ -159,7 +161,7 @@ export default class SystemModule {
 			});
 			await this.core.ubusCall('file', 'exec', {
 				command: '/bin/sh',
-				params: ['-c', 'cat /tmp/.passwd_input | passwd root && rm -f /tmp/.passwd_input']
+				params: ['-c', 'cat /tmp/.passwd_input | passwd root; rm -f /tmp/.passwd_input']
 			});
 			document.getElementById('new-password').value = '';
 			document.getElementById('confirm-password').value = '';
@@ -356,26 +358,27 @@ export default class SystemModule {
 	}
 
 	parseCron(data) {
-		return data
-			.split('\n')
-			.filter(l => l.trim())
-			.map(line => {
-				const enabled = !line.trim().startsWith('#');
-				const clean = line.replace(/^#\s*/, '').trim();
-				const parts = clean.split(/\s+/);
-				if (parts.length < 6) return null;
-				return {
-					schedule: parts.slice(0, 5).join(' '),
-					command: parts.slice(5).join(' '),
-					enabled,
-					minute: parts[0],
-					hour: parts[1],
-					day: parts[2],
-					month: parts[3],
-					weekday: parts[4]
-				};
-			})
-			.filter(Boolean);
+		const result = [];
+		const lines = data.split('\n');
+		lines.forEach((line, rawIndex) => {
+			if (!line.trim()) return;
+			const enabled = !line.trim().startsWith('#');
+			const clean = line.replace(/^#\s*/, '').trim();
+			const parts = clean.split(/\s+/);
+			if (parts.length < 6) return;
+			result.push({
+				schedule: parts.slice(0, 5).join(' '),
+				command: parts.slice(5).join(' '),
+				enabled,
+				minute: parts[0],
+				hour: parts[1],
+				day: parts[2],
+				month: parts[3],
+				weekday: parts[4],
+				rawIndex
+			});
+		});
+		return result;
 	}
 
 	editCronEntry(index) {
@@ -408,19 +411,21 @@ export default class SystemModule {
 			return;
 		}
 
-		const line = `${enabled ? '' : '# '}${minute} ${hour} ${day} ${month} ${weekday} ${command}`;
-		const lines = this.cronRaw.split('\n').filter(l => l.trim());
+		const newLine = `${enabled ? '' : '# '}${minute} ${hour} ${day} ${month} ${weekday} ${command}`;
+		const lines = this.cronRaw.split('\n');
 
 		if (index !== '') {
-			lines[parseInt(index)] = line;
+			const entries = this.parseCron(this.cronRaw);
+			const entry = entries[parseInt(index)];
+			if (entry) lines[entry.rawIndex] = newLine;
 		} else {
-			lines.push(line);
+			lines.push(newLine);
 		}
 
 		try {
 			await this.core.ubusCall('file', 'write', {
 				path: '/etc/crontabs/root',
-				data: lines.join('\n') + '\n'
+				data: lines.join('\n') + (this.cronRaw.endsWith('\n') ? '' : '\n')
 			});
 			this.core.closeModal('cron-modal');
 			this.core.showToast('Cron entry saved', 'success');
@@ -432,12 +437,15 @@ export default class SystemModule {
 
 	async deleteCronEntry(index) {
 		if (!confirm('Delete this scheduled task?')) return;
-		const lines = this.cronRaw.split('\n').filter(l => l.trim());
-		lines.splice(parseInt(index), 1);
+		const entries = this.parseCron(this.cronRaw);
+		const entry = entries[parseInt(index)];
+		if (!entry) return;
+		const lines = this.cronRaw.split('\n');
+		lines.splice(entry.rawIndex, 1);
 		try {
 			await this.core.ubusCall('file', 'write', {
 				path: '/etc/crontabs/root',
-				data: lines.join('\n') + '\n'
+				data: lines.join('\n') + (this.cronRaw.endsWith('\n') ? '' : '\n')
 			});
 			this.core.showToast('Task deleted', 'success');
 			this.loadCron();
