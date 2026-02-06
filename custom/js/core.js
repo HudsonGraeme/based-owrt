@@ -396,8 +396,10 @@ export class OpenWrtCore {
 		return this.ubusCall('uci', 'set', { config, section, values });
 	}
 
-	uciAdd(config, type) {
-		return this.ubusCall('uci', 'add', { config, type });
+	uciAdd(config, type, name = null) {
+		const params = { config, type };
+		if (name) params.name = name;
+		return this.ubusCall('uci', 'add', params);
 	}
 
 	uciDelete(config, section, option = null) {

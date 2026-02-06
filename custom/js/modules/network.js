@@ -883,14 +883,9 @@ export default class NetworkModule {
 			if (section) {
 				await this.core.uciSet('ddns', section, values);
 			} else {
-				await this.core.uciAdd('ddns', 'service');
-				const [, cfg] = await this.core.uciGet('ddns');
-				const sections = Object.entries(cfg.values).filter(([, v]) => v['.type'] === 'service');
-				const last = sections[sections.length - 1];
-				if (last) {
-					await this.core.uciSet('ddns', last[0], values);
-					if (name) await this.core.uciSet('ddns', last[0], { '.name': name });
-				}
+				const sectionName = name || `ddns_${Date.now()}`;
+				await this.core.uciAdd('ddns', 'service', sectionName);
+				await this.core.uciSet('ddns', sectionName, values);
 			}
 			await this.core.uciCommit('ddns');
 			this.core.closeModal('ddns-modal');

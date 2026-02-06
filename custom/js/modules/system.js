@@ -200,6 +200,7 @@ export default class SystemModule {
 			a.download = `backup-${new Date().toISOString().slice(0, 10)}.tar.gz`;
 			a.click();
 			URL.revokeObjectURL(url);
+			await this.core.ubusCall('file', 'exec', { command: '/bin/rm', params: ['-f', '/tmp/backup.tar.gz'] });
 			this.core.showToast('Backup created', 'success');
 		} catch {
 			this.core.showToast('Failed to create backup', 'error');
@@ -308,6 +309,10 @@ export default class SystemModule {
 	}
 
 	async toggleService(name) {
+		if (!/^[a-zA-Z0-9_-]+$/.test(name)) {
+			this.core.showToast('Invalid service name', 'error');
+			return;
+		}
 		try {
 			const [status, result] = await this.core.ubusCall('service', 'list', {});
 			const info = result?.[name];
@@ -493,18 +498,20 @@ export default class SystemModule {
 	}
 
 	parseSSHKeys(data) {
-		return data
-			.split('\n')
-			.filter(l => l.trim() && !l.startsWith('#'))
-			.map(line => {
-				const parts = line.trim().split(/\s+/);
-				return {
-					type: parts[0] || 'unknown',
-					key: parts[1] || '',
-					comment: parts.slice(2).join(' ')
-				};
-			})
-			.filter(k => k.key);
+		const result = [];
+		const lines = data.split('\n');
+		lines.forEach((line, rawIndex) => {
+			if (!line.trim() || line.startsWith('#')) return;
+			const parts = line.trim().split(/\s+/);
+			if (!parts[1]) return;
+			result.push({
+				type: parts[0] || 'unknown',
+				key: parts[1],
+				comment: parts.slice(2).join(' '),
+				rawIndex
+			});
+		});
+		return result;
 	}
 
 	parseSSHKeyInput() {
@@ -570,8 +577,11 @@ export default class SystemModule {
 	async deleteSSHKey(index) {
 		if (!confirm('Remove this SSH key?')) return;
 		const keys = this.parseSSHKeys(this.sshKeysRaw);
-		keys.splice(parseInt(index), 1);
-		const newContent = keys.map(k => `${k.type} ${k.key}${k.comment ? ' ' + k.comment : ''}`).join('\n') + '\n';
+		const entry = keys[parseInt(index)];
+		if (!entry) return;
+		const lines = this.sshKeysRaw.split('\n');
+		lines.splice(entry.rawIndex, 1);
+		const newContent = lines.join('\n') + (this.sshKeysRaw.endsWith('\n') ? '' : '\n');
 		try {
 			await this.core.ubusCall('file', 'write', {
 				path: '/etc/dropbear/authorized_keys',
@@ -786,6 +796,7 @@ export default class SystemModule {
 				const err = r?.stderr || r?.stdout || 'Validation failed';
 				if (statusEl) statusEl.textContent = 'Validation failed: ' + err;
 				this.core.showToast('Firmware validation failed', 'error');
+				await this.core.ubusCall('file', 'exec', { command: '/bin/rm', params: ['-f', '/tmp/firmware.bin'] });
 				return;
 			}
 
