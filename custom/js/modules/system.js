@@ -437,6 +437,7 @@ export default class SystemModule {
 			const entry = entries[parseInt(index)];
 			if (entry) lines[entry.rawIndex] = newLine;
 		} else {
+			if (lines.length && lines[lines.length - 1] === '') lines.pop();
 			lines.push(newLine);
 		}
 

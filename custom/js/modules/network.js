@@ -777,6 +777,7 @@ export default class NetworkModule {
 			const origIdx = dataIndices[parseInt(index)];
 			if (origIdx !== undefined) lines[origIdx] = `${ip}\t${names}`;
 		} else {
+			if (lines.length && lines[lines.length - 1] === '') lines.pop();
 			lines.push(`${ip}\t${names}`);
 		}
 
@@ -875,7 +876,8 @@ export default class NetworkModule {
 			if (section) {
 				await this.core.uciSet('ddns', section, values);
 			} else {
-				const [, res] = await this.core.uciAdd('ddns', 'service');
+				const sectionName = name || null;
+				const [, res] = await this.core.uciAdd('ddns', 'service', sectionName);
 				if (!res?.section) throw new Error('Failed to create section');
 				await this.core.uciSet('ddns', res.section, values);
 			}
@@ -1044,7 +1046,7 @@ export default class NetworkModule {
 					const pubKey = p.public_key ? this.core.escapeHtml(p.public_key.substring(0, 20)) + '...' : 'N/A';
 					const endpoint =
 						p.endpoint_host && p.endpoint_port
-							? `${this.core.escapeHtml(p.endpoint_host)}:${p.endpoint_port}`
+							? `${this.core.escapeHtml(p.endpoint_host)}:${this.core.escapeHtml(String(p.endpoint_port))}`
 							: 'N/A';
 					return `<tr>
 					<td>${this.core.escapeHtml(p.description || p.section)}</td>
