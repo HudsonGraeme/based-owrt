@@ -161,13 +161,17 @@ export default class SystemModule {
 			});
 			await this.core.ubusCall('file', 'exec', {
 				command: '/bin/sh',
-				params: ['-c', 'cat /tmp/.passwd_input | passwd root; rm -f /tmp/.passwd_input']
+				params: ['-c', 'cat /tmp/.passwd_input | passwd root']
 			});
 			document.getElementById('new-password').value = '';
 			document.getElementById('confirm-password').value = '';
 			this.core.showToast('Password changed', 'success');
 		} catch {
 			this.core.showToast('Failed to change password', 'error');
+		} finally {
+			try {
+				await this.core.ubusCall('file', 'exec', { command: '/bin/rm', params: ['-f', '/tmp/.passwd_input'] });
+			} catch {}
 		}
 	}
 
@@ -200,10 +204,13 @@ export default class SystemModule {
 			a.download = `backup-${new Date().toISOString().slice(0, 10)}.tar.gz`;
 			a.click();
 			URL.revokeObjectURL(url);
-			await this.core.ubusCall('file', 'exec', { command: '/bin/rm', params: ['-f', '/tmp/backup.tar.gz'] });
 			this.core.showToast('Backup created', 'success');
 		} catch {
 			this.core.showToast('Failed to create backup', 'error');
+		} finally {
+			try {
+				await this.core.ubusCall('file', 'exec', { command: '/bin/rm', params: ['-f', '/tmp/backup.tar.gz'] });
+			} catch {}
 		}
 	}
 
@@ -323,7 +330,8 @@ export default class SystemModule {
 				command: `/etc/init.d/${name}`,
 				params: [action]
 			});
-			this.core.showToast(`Service ${name} ${action}ed`, 'success');
+			const pastTense = action === 'stop' ? 'stopped' : `${action}ed`;
+			this.core.showToast(`Service ${name} ${pastTense}`, 'success');
 			this.loadStartup();
 		} catch {
 			this.core.showToast(`Failed to toggle service ${name}`, 'error');
@@ -754,9 +762,12 @@ export default class SystemModule {
 			const chunk = this.firmwareFile.slice(offset, offset + CHUNK_SIZE);
 			const buffer = await readChunk(chunk);
 			const bytes = new Uint8Array(buffer);
-			let binary = '';
-			for (let i = 0; i < bytes.length; i++) binary += String.fromCharCode(bytes[i]);
-			const b64 = btoa(binary);
+			const parts = [];
+			const batchSize = 8192;
+			for (let i = 0; i < bytes.length; i += batchSize) {
+				parts.push(String.fromCharCode.apply(null, bytes.subarray(i, i + batchSize)));
+			}
+			const b64 = btoa(parts.join(''));
 
 			await this.core.ubusCall(
 				'file',
@@ -806,6 +817,9 @@ export default class SystemModule {
 		} catch {
 			if (statusEl) statusEl.textContent = 'Upload or validation failed';
 			this.core.showToast('Firmware validation failed', 'error');
+			try {
+				await this.core.ubusCall('file', 'exec', { command: '/bin/rm', params: ['-f', '/tmp/firmware.bin'] });
+			} catch {}
 		}
 	}
 

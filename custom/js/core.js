@@ -210,6 +210,9 @@ export class OpenWrtCore {
 
 	startPolling() {
 		if (this.pollInterval) clearInterval(this.pollInterval);
+		if (this._visibilityHandler) {
+			document.removeEventListener('visibilitychange', this._visibilityHandler);
+		}
 
 		this.pollInterval = setInterval(() => {
 			if (document.hidden) return;
@@ -353,7 +356,7 @@ export class OpenWrtCore {
 		document.getElementById('main-view').classList.remove('hidden');
 	}
 
-	async ubusCall(object, method, params = {}, { timeout = 10000, retries = 2 } = {}) {
+	async ubusCall(object, method, params = {}, { timeout = 10000, retries = 0 } = {}) {
 		let lastError;
 		for (let attempt = 0; attempt <= retries; attempt++) {
 			const controller = new AbortController();
@@ -389,7 +392,7 @@ export class OpenWrtCore {
 	uciGet(config, section = null) {
 		const params = { config };
 		if (section) params.section = section;
-		return this.ubusCall('uci', 'get', params);
+		return this.ubusCall('uci', 'get', params, { retries: 2 });
 	}
 
 	uciSet(config, section, values) {

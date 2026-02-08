@@ -187,7 +187,7 @@ export default class NetworkModule {
 					<td>${this.core.escapeHtml(iface.interface)}</td>
 					<td>${this.core.escapeHtml(iface.proto || 'none').toUpperCase()}</td>
 					<td>${iface.up ? this.core.renderBadge('success', 'UP') : this.core.renderBadge('error', 'DOWN')}</td>
-					<td>${ipv4}</td>
+					<td>${this.core.escapeHtml(ipv4)}</td>
 					<td>${rx} / ${tx}</td>
 					<td>${this.core.renderActionButtons(iface.interface)}</td>
 				</tr>`;
@@ -451,11 +451,8 @@ export default class NetworkModule {
 			if (section) {
 				await this.core.uciSet('firewall', section, values);
 			} else {
-				await this.core.uciAdd('firewall', 'redirect');
-				const [, cfg] = await this.core.uciGet('firewall');
-				const sections = Object.entries(cfg.values).filter(([, v]) => v['.type'] === 'redirect');
-				const last = sections[sections.length - 1];
-				if (last) await this.core.uciSet('firewall', last[0], values);
+				const [, res] = await this.core.uciAdd('firewall', 'redirect');
+				if (res?.section) await this.core.uciSet('firewall', res.section, values);
 			}
 			await this.core.uciCommit('firewall');
 			this.core.closeModal('forward-modal');
@@ -512,11 +509,8 @@ export default class NetworkModule {
 			if (section) {
 				await this.core.uciSet('firewall', section, values);
 			} else {
-				await this.core.uciAdd('firewall', 'rule');
-				const [, cfg] = await this.core.uciGet('firewall');
-				const sections = Object.entries(cfg.values).filter(([, v]) => v['.type'] === 'rule');
-				const last = sections[sections.length - 1];
-				if (last) await this.core.uciSet('firewall', last[0], values);
+				const [, res] = await this.core.uciAdd('firewall', 'rule');
+				if (res?.section) await this.core.uciSet('firewall', res.section, values);
 			}
 			await this.core.uciCommit('firewall');
 			this.core.closeModal('fw-rule-modal');
@@ -618,11 +612,8 @@ export default class NetworkModule {
 			if (section) {
 				await this.core.uciSet('dhcp', section, values);
 			} else {
-				await this.core.uciAdd('dhcp', 'host');
-				const [, cfg] = await this.core.uciGet('dhcp');
-				const sections = Object.entries(cfg.values).filter(([, v]) => v['.type'] === 'host');
-				const last = sections[sections.length - 1];
-				if (last) await this.core.uciSet('dhcp', last[0], values);
+				const [, res] = await this.core.uciAdd('dhcp', 'host');
+				if (res?.section) await this.core.uciSet('dhcp', res.section, values);
 			}
 			await this.core.uciCommit('dhcp');
 			this.core.closeModal('static-lease-modal');
@@ -732,11 +723,8 @@ export default class NetworkModule {
 			if (section) {
 				await this.core.uciSet('dhcp', section, values);
 			} else {
-				await this.core.uciAdd('dhcp', 'domain');
-				const [, cfg] = await this.core.uciGet('dhcp');
-				const sections = Object.entries(cfg.values).filter(([, v]) => v['.type'] === 'domain');
-				const last = sections[sections.length - 1];
-				if (last) await this.core.uciSet('dhcp', last[0], values);
+				const [, res] = await this.core.uciAdd('dhcp', 'domain');
+				if (res?.section) await this.core.uciSet('dhcp', res.section, values);
 			}
 			await this.core.uciCommit('dhcp');
 			this.core.closeModal('dns-entry-modal');
@@ -994,11 +982,8 @@ export default class NetworkModule {
 			if (section) {
 				await this.core.uciSet('qos', section, values);
 			} else {
-				await this.core.uciAdd('qos', 'classify');
-				const [, cfg] = await this.core.uciGet('qos');
-				const sections = Object.entries(cfg.values).filter(([, v]) => v['.type'] === 'classify');
-				const last = sections[sections.length - 1];
-				if (last) await this.core.uciSet('qos', last[0], values);
+				const [, res] = await this.core.uciAdd('qos', 'classify');
+				if (res?.section) await this.core.uciSet('qos', res.section, values);
 			}
 			await this.core.uciCommit('qos');
 			this.core.closeModal('qos-rule-modal');
@@ -1156,11 +1141,8 @@ export default class NetworkModule {
 			if (section) {
 				await this.core.uciSet('network', section, values);
 			} else {
-				await this.core.uciAdd('network', `wireguard_${ifaceName}`);
-				const [, cfg] = await this.core.uciGet('network');
-				const sections = Object.entries(cfg.values).filter(([, v]) => v['.type']?.startsWith('wireguard_'));
-				const last = sections[sections.length - 1];
-				if (last) await this.core.uciSet('network', last[0], values);
+				const [, res] = await this.core.uciAdd('network', `wireguard_${ifaceName}`);
+				if (res?.section) await this.core.uciSet('network', res.section, values);
 			}
 			await this.core.uciCommit('network');
 			this.core.closeModal('wg-peer-modal');
