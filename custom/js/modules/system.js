@@ -223,7 +223,12 @@ export default class SystemModule {
 				params: ['-y']
 			});
 			this.core.showToast('Factory reset initiated, rebooting...', 'success');
-			setTimeout(() => this.rebootSystem(), 2000);
+			setTimeout(async () => {
+				try {
+					await this.core.ubusCall('system', 'reboot', {});
+					setTimeout(() => this.core.logout(), 2000);
+				} catch {}
+			}, 2000);
 		} catch {
 			this.core.showToast('Failed to initiate factory reset', 'error');
 		}

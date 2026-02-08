@@ -452,7 +452,8 @@ export default class NetworkModule {
 				await this.core.uciSet('firewall', section, values);
 			} else {
 				const [, res] = await this.core.uciAdd('firewall', 'redirect');
-				if (res?.section) await this.core.uciSet('firewall', res.section, values);
+				if (!res?.section) throw new Error('Failed to create section');
+				await this.core.uciSet('firewall', res.section, values);
 			}
 			await this.core.uciCommit('firewall');
 			this.core.closeModal('forward-modal');
@@ -510,7 +511,8 @@ export default class NetworkModule {
 				await this.core.uciSet('firewall', section, values);
 			} else {
 				const [, res] = await this.core.uciAdd('firewall', 'rule');
-				if (res?.section) await this.core.uciSet('firewall', res.section, values);
+				if (!res?.section) throw new Error('Failed to create section');
+				await this.core.uciSet('firewall', res.section, values);
 			}
 			await this.core.uciCommit('firewall');
 			this.core.closeModal('fw-rule-modal');
@@ -613,7 +615,8 @@ export default class NetworkModule {
 				await this.core.uciSet('dhcp', section, values);
 			} else {
 				const [, res] = await this.core.uciAdd('dhcp', 'host');
-				if (res?.section) await this.core.uciSet('dhcp', res.section, values);
+				if (!res?.section) throw new Error('Failed to create section');
+				await this.core.uciSet('dhcp', res.section, values);
 			}
 			await this.core.uciCommit('dhcp');
 			this.core.closeModal('static-lease-modal');
@@ -724,7 +727,8 @@ export default class NetworkModule {
 				await this.core.uciSet('dhcp', section, values);
 			} else {
 				const [, res] = await this.core.uciAdd('dhcp', 'domain');
-				if (res?.section) await this.core.uciSet('dhcp', res.section, values);
+				if (!res?.section) throw new Error('Failed to create section');
+				await this.core.uciSet('dhcp', res.section, values);
 			}
 			await this.core.uciCommit('dhcp');
 			this.core.closeModal('dns-entry-modal');
@@ -871,9 +875,9 @@ export default class NetworkModule {
 			if (section) {
 				await this.core.uciSet('ddns', section, values);
 			} else {
-				const sectionName = name || `ddns_${Date.now()}`;
-				await this.core.uciAdd('ddns', 'service', sectionName);
-				await this.core.uciSet('ddns', sectionName, values);
+				const [, res] = await this.core.uciAdd('ddns', 'service');
+				if (!res?.section) throw new Error('Failed to create section');
+				await this.core.uciSet('ddns', res.section, values);
 			}
 			await this.core.uciCommit('ddns');
 			this.core.closeModal('ddns-modal');
@@ -983,7 +987,8 @@ export default class NetworkModule {
 				await this.core.uciSet('qos', section, values);
 			} else {
 				const [, res] = await this.core.uciAdd('qos', 'classify');
-				if (res?.section) await this.core.uciSet('qos', res.section, values);
+				if (!res?.section) throw new Error('Failed to create section');
+				await this.core.uciSet('qos', res.section, values);
 			}
 			await this.core.uciCommit('qos');
 			this.core.closeModal('qos-rule-modal');
@@ -1076,6 +1081,7 @@ export default class NetworkModule {
 	}
 
 	async generateWgKeys() {
+		let wroteKeyFile = false;
 		try {
 			const [s, r] = await this.core.ubusCall('file', 'exec', {
 				command: '/usr/bin/wg',
@@ -1092,9 +1098,11 @@ export default class NetworkModule {
 				path: '/tmp/.wg_priv.key',
 				data: privateKey + '\n'
 			});
+			wroteKeyFile = true;
+
 			const [s2, r2] = await this.core.ubusCall('file', 'exec', {
 				command: '/bin/sh',
-				params: ['-c', 'cat /tmp/.wg_priv.key | /usr/bin/wg pubkey; rm -f /tmp/.wg_priv.key']
+				params: ['-c', 'cat /tmp/.wg_priv.key | /usr/bin/wg pubkey']
 			});
 			if (s2 === 0 && r2?.stdout) {
 				document.getElementById('wg-public-key').value = r2.stdout.trim();
@@ -1102,6 +1110,15 @@ export default class NetworkModule {
 			this.core.showToast('Keys generated', 'success');
 		} catch {
 			this.core.showToast('Failed to generate keys', 'error');
+		} finally {
+			if (wroteKeyFile) {
+				try {
+					await this.core.ubusCall('file', 'exec', {
+						command: '/bin/rm',
+						params: ['-f', '/tmp/.wg_priv.key']
+					});
+				} catch {}
+			}
 		}
 	}
 
@@ -1142,7 +1159,8 @@ export default class NetworkModule {
 				await this.core.uciSet('network', section, values);
 			} else {
 				const [, res] = await this.core.uciAdd('network', `wireguard_${ifaceName}`);
-				if (res?.section) await this.core.uciSet('network', res.section, values);
+				if (!res?.section) throw new Error('Failed to create section');
+				await this.core.uciSet('network', res.section, values);
 			}
 			await this.core.uciCommit('network');
 			this.core.closeModal('wg-peer-modal');
@@ -1167,17 +1185,17 @@ export default class NetworkModule {
 
 	async loadDiagnostics() {
 		if (!this.core.isFeatureEnabled('diagnostics')) return;
-		await this.core.loadResource('connections-table', 4, null, async () => {
+		await this.core.loadResource('dhcp-clients-table', 4, null, async () => {
 			let leases = [];
 			try {
 				const [s, r] = await this.core.ubusCall('luci-rpc', 'getDHCPLeases', {});
 				if (s === 0 && r?.dhcp_leases) leases = r.dhcp_leases;
 			} catch {}
 
-			const tbody = document.querySelector('#connections-table tbody');
+			const tbody = document.querySelector('#dhcp-clients-table tbody');
 			if (!tbody) return;
 			if (leases.length === 0) {
-				this.core.renderEmptyTable(tbody, 4, 'No active connections');
+				this.core.renderEmptyTable(tbody, 4, 'No DHCP clients');
 				return;
 			}
 			tbody.innerHTML = leases
@@ -1186,7 +1204,7 @@ export default class NetworkModule {
 				<td>${this.core.escapeHtml(l.ipaddr || 'N/A')}</td>
 				<td>${this.core.escapeHtml(l.macaddr || 'N/A')}</td>
 				<td>${this.core.escapeHtml(l.hostname || 'Unknown')}</td>
-				<td>${this.core.renderBadge('success', 'Active')}</td>
+				<td>${l.expires > 0 ? l.expires + 's' : 'Permanent'}</td>
 			</tr>`
 				)
 				.join('');
